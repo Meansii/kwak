@@ -236,12 +236,20 @@ body {
 /* Prayer requests */
 .prayer-form {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-bottom: 14px;
-  align-items: flex-end;
 }
-.prayer-form textarea {
+.prayer-form-row {
+  display: flex;
+  gap: 8px;
+}
+.prayer-form-row input {
   flex: 1;
+  min-width: 0;
+}
+.prayer-form textarea,
+.prayer-form input[type="text"] {
   resize: none;
   padding: 10px 12px;
   border-radius: 10px;
@@ -281,6 +289,23 @@ body {
   margin-bottom: 8px;
 }
 .prayer-item.answered .prayer-item-text { text-decoration: line-through; color: var(--text-muted); }
+
+.prayer-item-verse {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  margin-bottom: 9px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  word-break: break-word;
+}
 .prayer-item-meta {
   display: flex;
   justify-content: space-between;
@@ -297,6 +322,7 @@ body {
   color: var(--text-muted);
   padding: 2px;
 }
+.prayer-item-actions button.verse-btn { color: var(--primary); }
 .prayer-item-actions button.answer-btn { color: var(--accent); font-weight: 600; }
 .prayer-item-actions button.delete-btn { color: var(--danger); }
 

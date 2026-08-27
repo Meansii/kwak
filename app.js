@@ -344,6 +344,15 @@
       text.className = 'prayer-item-text';
       text.textContent = p.text;
 
+      li.appendChild(text);
+
+      if (p.verse) {
+        const verse = document.createElement('div');
+        verse.className = 'prayer-item-verse';
+        verse.textContent = `📖 ${p.verse}`;
+        li.appendChild(verse);
+      }
+
       const meta = document.createElement('div');
       meta.className = 'prayer-item-meta';
       const dateSpan = document.createElement('span');
@@ -353,6 +362,10 @@
 
       const actions = document.createElement('div');
       actions.className = 'prayer-item-actions';
+      const verseBtn = document.createElement('button');
+      verseBtn.className = 'verse-btn';
+      verseBtn.textContent = p.verse ? '말씀 수정' : '말씀 추가';
+      verseBtn.addEventListener('click', () => editVerse(p.id));
       const answerBtn = document.createElement('button');
       answerBtn.className = 'answer-btn';
       answerBtn.textContent = p.answered ? '응답 취소' : '응답됨';
@@ -362,12 +375,12 @@
       deleteBtn.textContent = '삭제';
       deleteBtn.addEventListener('click', () => deletePrayer(p.id));
 
+      actions.appendChild(verseBtn);
       actions.appendChild(answerBtn);
       actions.appendChild(deleteBtn);
       meta.appendChild(dateSpan);
       meta.appendChild(actions);
 
-      li.appendChild(text);
       li.appendChild(meta);
       frag.appendChild(li);
     });
@@ -383,6 +396,16 @@
     renderPrayers();
   }
 
+  function editVerse(id) {
+    const p = prayers.find((x) => x.id === id);
+    if (!p) return;
+    const input = prompt('관련 말씀을 적어주세요 (예: 빌립보서 4:6)', p.verse || '');
+    if (input === null) return;
+    p.verse = input.trim();
+    saveJSON(STORAGE_KEYS.prayers, prayers);
+    renderPrayers();
+  }
+
   function deletePrayer(id) {
     prayers = prayers.filter((x) => x.id !== id);
     saveJSON(STORAGE_KEYS.prayers, prayers);
@@ -392,17 +415,20 @@
   document.getElementById('prayerForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const input = document.getElementById('prayerInput');
+    const verseInput = document.getElementById('prayerVerseInput');
     const text = input.value.trim();
     if (!text) return;
     prayers.unshift({
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
       text,
+      verse: verseInput.value.trim(),
       createdAt: new Date().toISOString(),
       answered: false,
       answeredAt: null,
     });
     saveJSON(STORAGE_KEYS.prayers, prayers);
     input.value = '';
+    verseInput.value = '';
     renderPrayers();
   });
 

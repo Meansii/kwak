@@ -77,7 +77,10 @@
       <section id="tab-prayer" class="tab-panel">
         <form id="prayerForm" class="prayer-form">
           <textarea id="prayerInput" placeholder="기도제목을 적어주세요..." rows="2" required></textarea>
-          <button type="submit" class="btn btn-primary">추가</button>
+          <div class="prayer-form-row">
+            <input type="text" id="prayerVerseInput" placeholder="관련 말씀 (예: 빌립보서 4:6)">
+            <button type="submit" class="btn btn-primary">추가</button>
+          </div>
         </form>
 
         <div class="filter-row">
