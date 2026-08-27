@@ -140,6 +140,11 @@ body {
 }
 .chapter-link:hover { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
 
+.chapter-link.is-static {
+  color: var(--text-muted);
+  cursor: default;
+}
+.bible-source-buttons { display: flex; gap: 12px; margin-top: 4px; }
 .bible-target-note {
   margin: -8px 0 14px;
   color: var(--text-muted);

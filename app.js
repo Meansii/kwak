@@ -124,7 +124,9 @@
 
   function bibleUrlPattern() {
     try {
-      return localStorage.getItem(STORAGE_KEYS.bibleUrl) || DEFAULT_BIBLE_URL;
+      // 저장된 적이 없으면 기본 주소, 일부러 비웠으면 빈 값(= 열지 않음)입니다.
+      const saved = localStorage.getItem(STORAGE_KEYS.bibleUrl);
+      return saved === null ? DEFAULT_BIBLE_URL : saved;
     } catch (e) {
       return DEFAULT_BIBLE_URL;
     }
@@ -209,6 +211,10 @@
     note.hidden = !visible;
     if (!visible) return;
     const appPattern = bibleAppUrlPattern();
+    if (!appPattern && !bibleUrlPattern()) {
+      document.getElementById('bibleTargetText').textContent = '장을 눌러도 다른 앱이 열리지 않습니다';
+      return;
+    }
     let where;
     if (appPattern) {
       where = appPattern.replace(/:.*$/, '');
@@ -233,12 +239,22 @@
       const webUrl = chapterUrl(book, chapter);
       const appUrl = chapterUrl(book, chapter, bibleAppUrlPattern());
       const label = `${book} ${chapter}장`;
+      const text = singleBook ? `${chapter}장` : label;
+
+      if (!webUrl && !appUrl) {
+        const span = document.createElement('span');
+        span.className = 'chapter-link is-static';
+        span.textContent = text;
+        frag.appendChild(span);
+        return;
+      }
+
       const a = document.createElement('a');
       a.className = 'chapter-link';
-      a.href = webUrl;
+      a.href = webUrl || '#';
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
-      a.textContent = singleBook ? `${chapter}장` : label;
+      a.textContent = text;
       a.addEventListener('click', (e) => {
         e.preventDefault();
         openChapter(appUrl, webUrl, label);
@@ -271,7 +287,7 @@
   bibleAppUrlInput.value = bibleAppUrlPattern();
 
   bibleUrlInput.addEventListener('change', () => {
-    const value = bibleUrlInput.value.trim() || DEFAULT_BIBLE_URL;
+    const value = bibleUrlInput.value.trim();
     bibleUrlInput.value = value;
     saveBibleUrl(STORAGE_KEYS.bibleUrl, value);
     renderBibleTab();
@@ -314,6 +330,15 @@
     try {
       window.location.href = chapterUrl('창세기', 1, pattern);
     } catch (e) { /* 잘못된 주소면 아래 안내가 뜹니다 */ }
+  });
+
+  document.getElementById('bibleNoOpenBtn').addEventListener('click', () => {
+    bibleAppUrlInput.value = '';
+    bibleUrlInput.value = '';
+    saveBibleUrl(STORAGE_KEYS.bibleAppUrl, '');
+    saveBibleUrl(STORAGE_KEYS.bibleUrl, '');
+    document.getElementById('bibleAppTestResult').hidden = true;
+    renderBibleTab();
   });
 
   document.getElementById('bibleUrlResetBtn').addEventListener('click', () => {
