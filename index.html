@@ -79,8 +79,10 @@
           <textarea id="prayerInput" placeholder="기도제목을 적어주세요..." rows="2" required></textarea>
           <div class="prayer-form-row">
             <input type="text" id="prayerVerseInput" placeholder="관련 말씀 (예: 빌립보서 4:6)">
+            <button type="button" id="verseSearchBtn" class="btn btn-secondary">🔍 찾기</button>
             <button type="submit" class="btn btn-primary">추가</button>
           </div>
+          <p id="pendingVerseText" class="pending-verse" hidden></p>
         </form>
 
         <div class="filter-row">
@@ -107,6 +109,28 @@
     </nav>
   </div>
 
+  <!-- 말씀 찾기 -->
+  <div id="verseModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="verseModalTitle">
+      <div class="modal-header">
+        <h3 id="verseModalTitle">말씀 찾기</h3>
+        <button type="button" class="modal-close" data-close-modal aria-label="닫기">✕</button>
+      </div>
+      <input type="search" id="verseSearchInput" class="verse-search-input"
+             placeholder="감동, 위로, 평안… 마음에 있는 단어를 적어보세요"
+             autocomplete="off">
+      <div id="verseChips" class="verse-chips"></div>
+      <ul id="verseResults" class="verse-results"></ul>
+      <p id="verseNoResult" class="empty-msg" hidden>그 단어에 맞는 구절을 못 찾았어요. 다른 단어로 찾아보세요.</p>
+      <div class="modal-footer">
+        <span>개역개정 기준 · 본문은 성경에서 다시 확인해 주세요</span>
+        <button type="button" id="verseManualBtn" class="btn-link">직접 입력</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="verses.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

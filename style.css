@@ -273,6 +273,98 @@ body {
 }
 .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
+.pending-verse {
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+/* 말씀 찾기 모달 */
+.modal { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
+.modal[hidden] { display: none; }
+.modal-backdrop { position: absolute; inset: 0; background: rgba(40, 28, 16, 0.45); }
+.modal-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  background: var(--bg);
+  border-radius: 18px 18px 0 0;
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -8px 30px rgba(60, 40, 20, 0.2);
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; }
+.modal-header h3 { margin: 0; font-size: 16px; }
+.modal-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-muted); font-size: 16px; padding: 4px 6px;
+}
+.verse-search-input {
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+}
+.verse-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+.verse-chip {
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.verse-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+.verse-results { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; }
+.verse-result {
+  width: 100%;
+  text-align: left;
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.verse-result:hover { border-color: var(--primary); }
+.verse-result-ref { color: var(--primary); font-size: 12.5px; font-weight: 700; margin-bottom: 4px; }
+.verse-result-text { color: var(--text); font-size: 13px; line-height: 1.6; }
+
+.modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 .prayer-list { list-style: none; margin: 0; padding: 0; }
 .prayer-item {
   background: var(--surface);
@@ -305,6 +397,15 @@ body {
   font-weight: 600;
   line-height: 1.4;
   word-break: break-word;
+}
+
+.prayer-item-verse-text {
+  margin: -3px 0 9px;
+  padding-left: 11px;
+  border-left: 2px solid var(--border);
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.6;
 }
 .prayer-item-meta {
   display: flex;

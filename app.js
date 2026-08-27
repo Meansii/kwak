@@ -353,6 +353,13 @@
         li.appendChild(verse);
       }
 
+      if (p.verseText) {
+        const verseText = document.createElement('blockquote');
+        verseText.className = 'prayer-item-verse-text';
+        verseText.textContent = p.verseText;
+        li.appendChild(verseText);
+      }
+
       const meta = document.createElement('div');
       meta.className = 'prayer-item-meta';
       const dateSpan = document.createElement('span');
@@ -396,14 +403,173 @@
     renderPrayers();
   }
 
-  function editVerse(id) {
-    const p = prayers.find((x) => x.id === id);
-    if (!p) return;
-    const input = prompt('관련 말씀을 적어주세요 (예: 빌립보서 4:6)', p.verse || '');
+  // ---------- 말씀 찾기 ----------
+  const TOPICS = window.VERSE_TOPICS || [];
+
+  // 같은 구절이 여러 주제에 있으면 하나로 합칩니다.
+  const VERSE_INDEX = (() => {
+    const byRef = new Map();
+    TOPICS.forEach((t) => {
+      const keys = [t.topic].concat(t.aliases || []);
+      t.verses.forEach((v) => {
+        const found = byRef.get(v.ref);
+        if (found) {
+          found.keys.push(...keys);
+        } else {
+          byRef.set(v.ref, { ref: v.ref, text: v.text, keys: keys.slice() });
+        }
+      });
+    });
+    return Array.from(byRef.values());
+  })();
+
+  function searchVerses(query) {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const scored = [];
+    VERSE_INDEX.forEach((v, order) => {
+      let score = 0;
+      if (v.keys.some((k) => k.toLowerCase() === q)) score = 4;
+      else if (v.keys.some((k) => k.toLowerCase().includes(q) || q.includes(k.toLowerCase()))) score = 3;
+      else if (v.ref.toLowerCase().includes(q)) score = 2;
+      else if (v.text.toLowerCase().includes(q)) score = 1;
+      if (score > 0) scored.push({ v, score, order });
+    });
+    scored.sort((a, b) => (b.score - a.score) || (a.order - b.order));
+    return scored.slice(0, 40).map((s) => s.v);
+  }
+
+  const verseModal = document.getElementById('verseModal');
+  const verseSearchInput = document.getElementById('verseSearchInput');
+  const verseResultsEl = document.getElementById('verseResults');
+  const verseNoResultEl = document.getElementById('verseNoResult');
+  const verseChipsEl = document.getElementById('verseChips');
+  const pendingVerseEl = document.getElementById('pendingVerseText');
+
+  // 새 기도제목 폼에 담아둔 말씀 본문 (참조는 입력칸에 그대로 보입니다)
+  let pendingVerseText = '';
+  // 모달이 어디로 결과를 넣을지: null 이면 새 기도제목 폼, 아니면 해당 기도제목 id
+  let verseTargetId = null;
+
+  function renderVerseChips() {
+    const frag = document.createDocumentFragment();
+    TOPICS.forEach((t) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'verse-chip';
+      chip.textContent = t.topic;
+      chip.addEventListener('click', () => {
+        verseSearchInput.value = t.topic;
+        renderVerseResults();
+      });
+      frag.appendChild(chip);
+    });
+    verseChipsEl.appendChild(frag);
+  }
+
+  function renderVerseResults() {
+    const query = verseSearchInput.value;
+    const results = searchVerses(query);
+
+    Array.from(verseChipsEl.children).forEach((chip) => {
+      chip.classList.toggle('active', chip.textContent === query.trim());
+    });
+
+    verseResultsEl.innerHTML = '';
+    verseNoResultEl.hidden = !(query.trim() && results.length === 0);
+
+    const frag = document.createDocumentFragment();
+    results.forEach((v) => {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'verse-result';
+
+      const ref = document.createElement('div');
+      ref.className = 'verse-result-ref';
+      ref.textContent = v.ref;
+
+      const text = document.createElement('div');
+      text.className = 'verse-result-text';
+      text.textContent = v.text;
+
+      btn.appendChild(ref);
+      btn.appendChild(text);
+      btn.addEventListener('click', () => applyVerse(v.ref, v.text));
+      li.appendChild(btn);
+      frag.appendChild(li);
+    });
+    verseResultsEl.appendChild(frag);
+  }
+
+  function openVerseSearch(targetId) {
+    verseTargetId = targetId || null;
+    verseModal.hidden = false;
+    const seed = verseTargetId
+      ? (prayers.find((p) => p.id === verseTargetId) || {}).verse || ''
+      : document.getElementById('prayerVerseInput').value;
+    verseSearchInput.value = seed;
+    renderVerseResults();
+    verseSearchInput.focus();
+  }
+
+  function closeVerseSearch() {
+    verseModal.hidden = true;
+    verseTargetId = null;
+  }
+
+  function renderPendingVerse() {
+    if (pendingVerseText) {
+      pendingVerseEl.textContent = pendingVerseText;
+      pendingVerseEl.hidden = false;
+    } else {
+      pendingVerseEl.hidden = true;
+    }
+  }
+
+  function applyVerse(ref, text) {
+    if (verseTargetId) {
+      const p = prayers.find((x) => x.id === verseTargetId);
+      if (p) {
+        p.verse = ref;
+        p.verseText = text || '';
+        saveJSON(STORAGE_KEYS.prayers, prayers);
+        renderPrayers();
+      }
+    } else {
+      document.getElementById('prayerVerseInput').value = ref;
+      pendingVerseText = text || '';
+      renderPendingVerse();
+    }
+    closeVerseSearch();
+  }
+
+  verseModal.querySelectorAll('[data-close-modal]').forEach((el) => {
+    el.addEventListener('click', closeVerseSearch);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !verseModal.hidden) closeVerseSearch();
+  });
+  verseSearchInput.addEventListener('input', renderVerseResults);
+  document.getElementById('verseSearchBtn').addEventListener('click', () => openVerseSearch(null));
+  // 참조를 직접 고쳐 쓰면 찾아둔 본문은 떼어 냅니다.
+  document.getElementById('prayerVerseInput').addEventListener('input', () => {
+    if (!pendingVerseText) return;
+    pendingVerseText = '';
+    renderPendingVerse();
+  });
+  document.getElementById('verseManualBtn').addEventListener('click', () => {
+    const seed = verseTargetId
+      ? (prayers.find((p) => p.id === verseTargetId) || {}).verse || ''
+      : document.getElementById('prayerVerseInput').value;
+    const input = prompt('관련 말씀을 직접 적어주세요 (예: 빌립보서 4:6)', seed);
     if (input === null) return;
-    p.verse = input.trim();
-    saveJSON(STORAGE_KEYS.prayers, prayers);
-    renderPrayers();
+    applyVerse(input.trim(), '');
+  });
+  renderVerseChips();
+
+  function editVerse(id) {
+    openVerseSearch(id);
   }
 
   function deletePrayer(id) {
@@ -422,6 +588,7 @@
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
       text,
       verse: verseInput.value.trim(),
+      verseText: pendingVerseText,
       createdAt: new Date().toISOString(),
       answered: false,
       answeredAt: null,
@@ -429,6 +596,8 @@
     saveJSON(STORAGE_KEYS.prayers, prayers);
     input.value = '';
     verseInput.value = '';
+    pendingVerseText = '';
+    renderPendingVerse();
     renderPrayers();
   });
 

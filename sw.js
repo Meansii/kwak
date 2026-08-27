@@ -1,9 +1,10 @@
-const CACHE_NAME = 'malsseum-gido-v2';
+const CACHE_NAME = 'malsseum-gido-v3';
 const APP_SHELL = [
   './',
   './index.html',
   './style.css',
   './app.js',
+  './verses.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
