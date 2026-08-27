@@ -5,6 +5,7 @@
     completedDays: 'kwak_bible_completed_days',
     sessions: 'kwak_prayer_sessions',
     prayers: 'kwak_prayer_requests',
+    bibleUrl: 'kwak_bible_url_pattern',
   };
 
   const CHAPTERS_PER_DAY = 5;
@@ -25,6 +26,19 @@
     ['야고보서', 5], ['베드로전서', 5], ['베드로후서', 3], ['요한일서', 5], ['요한이서', 1],
     ['요한삼서', 1], ['유다서', 1], ['요한계시록', 22],
   ];
+
+  // BIBLE_BOOKS 와 같은 순서의 표준 USFM 약어 (성경 앱 링크에 씁니다)
+  const USFM_CODES = [
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA',
+    '1KI', '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO',
+    'ECC', 'SNG', 'ISA', 'JER', 'LAM', 'EZK', 'DAN', 'HOS', 'JOL', 'AMO',
+    'OBA', 'JON', 'MIC', 'NAM', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL',
+    'MAT', 'MRK', 'LUK', 'JHN', 'ACT', 'ROM', '1CO', '2CO', 'GAL', 'EPH',
+    'PHP', 'COL', '1TH', '2TH', '1TI', '2TI', 'TIT', 'PHM', 'HEB',
+    'JAS', '1PE', '2PE', '1JN', '2JN', '3JN', 'JUD', 'REV',
+  ];
+
+  const DEFAULT_BIBLE_URL = 'https://www.bible.com/bible/88/{usfm}.{chapter}.NKRV';
 
   function buildChapterSequence() {
     const seq = [];
@@ -59,6 +73,7 @@
   }
 
   const READING_PLAN = buildReadingPlan();
+  const BOOK_USFM = new Map(BIBLE_BOOKS.map(([name], i) => [name, USFM_CODES[i]]));
 
   function loadJSON(key, fallback) {
     try {
@@ -93,13 +108,70 @@
       todayEl.classList.add('done');
       btn.disabled = true;
       btn.textContent = '통독 완료';
+      renderChapterLinks(null);
     } else {
       todayEl.textContent = `${idx + 1}일차 · ${labelForDay(READING_PLAN[idx])}`;
       todayEl.classList.remove('done');
       btn.disabled = false;
       btn.textContent = '오늘 읽기 완료';
+      renderChapterLinks(READING_PLAN[idx]);
     }
   }
+
+  // ---------- 성경 앱으로 열기 ----------
+  const bibleUrlInput = document.getElementById('bibleUrlInput');
+
+  function bibleUrlPattern() {
+    try {
+      return localStorage.getItem(STORAGE_KEYS.bibleUrl) || DEFAULT_BIBLE_URL;
+    } catch (e) {
+      return DEFAULT_BIBLE_URL;
+    }
+  }
+
+  function saveBibleUrl(value) {
+    try { localStorage.setItem(STORAGE_KEYS.bibleUrl, value); } catch (e) { /* storage unavailable */ }
+  }
+
+  function chapterUrl(book, chapter) {
+    return bibleUrlPattern()
+      .replace(/\{usfm\}/g, BOOK_USFM.get(book) || '')
+      .replace(/\{book\}/g, encodeURIComponent(book))
+      .replace(/\{chapter\}/g, String(chapter));
+  }
+
+  function renderChapterLinks(dayChapters) {
+    const wrap = document.getElementById('todayChapters');
+    wrap.innerHTML = '';
+    if (!dayChapters) return;
+
+    // 한 책 안에서만 읽는 날은 "1장"처럼 짧게, 책이 넘어가는 날은 책 이름까지 보여 줍니다.
+    const singleBook = new Set(dayChapters.map((c) => c.book)).size === 1;
+    const frag = document.createDocumentFragment();
+    dayChapters.forEach(({ book, chapter }) => {
+      const a = document.createElement('a');
+      a.className = 'chapter-link';
+      a.href = chapterUrl(book, chapter);
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = singleBook ? `${chapter}장` : `${book} ${chapter}장`;
+      frag.appendChild(a);
+    });
+    wrap.appendChild(frag);
+  }
+
+  bibleUrlInput.value = bibleUrlPattern();
+  bibleUrlInput.addEventListener('change', () => {
+    const value = bibleUrlInput.value.trim() || DEFAULT_BIBLE_URL;
+    bibleUrlInput.value = value;
+    saveBibleUrl(value);
+    renderBibleTab();
+  });
+  document.getElementById('bibleUrlResetBtn').addEventListener('click', () => {
+    bibleUrlInput.value = DEFAULT_BIBLE_URL;
+    saveBibleUrl(DEFAULT_BIBLE_URL);
+    renderBibleTab();
+  });
 
   function renderProgress() {
     const total = READING_PLAN.length;

@@ -32,7 +32,19 @@
         <div class="card today-card">
           <div class="today-card-label">오늘 읽을 말씀</div>
           <div id="todayReading" class="today-reading">-</div>
+          <div id="todayChapters" class="chapter-links"></div>
           <button id="todayCompleteBtn" class="btn btn-primary">오늘 읽기 완료</button>
+
+          <details class="bible-source">
+            <summary>성경 앱 설정</summary>
+            <p class="bible-source-help">
+              장을 누르면 <strong>개역개정(NKRV)</strong>으로 열립니다. 다른 번역본이나 다른 성경 앱을 쓰시면
+              아래 주소를 바꿔 주세요. <code>{usfm}</code>(예: GEN), <code>{book}</code>(예: 창세기),
+              <code>{chapter}</code>(예: 1) 자리에 각 장이 채워집니다.
+            </p>
+            <input type="url" id="bibleUrlInput" spellcheck="false" autocomplete="off">
+            <button type="button" id="bibleUrlResetBtn" class="btn-link">기본값으로</button>
+          </details>
         </div>
 
         <div class="progress-block">
