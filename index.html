@@ -7,7 +7,7 @@
 <meta name="description" content="매일 성경 5장 통독, 1시간 기도 타이머, 기도제목 관리를 위한 개인경건 앱">
 
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#a97155">
+<meta name="theme-color" content="#1c1a17">
 
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -46,6 +46,16 @@
             <label class="bible-source-label" for="bibleAppUrlInput">성경 앱으로 열기 (비워두면 웹으로)</label>
             <input type="text" id="bibleAppUrlInput" spellcheck="false" autocomplete="off"
                    placeholder="예: youversion://bible?reference={usfm}.{chapter}.NKRV">
+            <p class="bible-source-tip">
+              쓰시는 성경 앱에서 아무 구절이나 <strong>공유하기</strong>를 눌러 나온 주소를 여기에 붙여넣고,
+              책 이름 자리를 <code>{usfm}</code> 또는 <code>{book}</code>으로, 장 번호 자리를
+              <code>{chapter}</code>로 바꿔 주세요.
+              주소가 맞지 않으면 "열 수 없습니다" 같은 알림이 한 번 뜰 수 있어요. 닫고 다시 시도하시면 됩니다.
+            </p>
+            <div class="bible-source-test">
+              <button type="button" id="bibleAppTestBtn" class="btn btn-secondary">창세기 1장으로 시험</button>
+              <span id="bibleAppTestResult" class="bible-source-test-result" hidden></span>
+            </div>
 
             <label class="bible-source-label" for="bibleUrlInput">앱이 없을 때 열 웹 주소</label>
             <input type="url" id="bibleUrlInput" spellcheck="false" autocomplete="off">

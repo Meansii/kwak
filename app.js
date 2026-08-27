@@ -265,6 +265,33 @@
     saveBibleUrl(STORAGE_KEYS.bibleAppUrl, value);
     renderBibleTab();
   });
+  document.getElementById('bibleAppTestBtn').addEventListener('click', () => {
+    const result = document.getElementById('bibleAppTestResult');
+    const pattern = bibleAppUrlInput.value.trim();
+    result.hidden = false;
+    if (!pattern) {
+      result.textContent = '앱 주소를 먼저 넣어 주세요.';
+      return;
+    }
+
+    result.textContent = '창세기 1장으로 열어보는 중…';
+    let switched = false;
+    const onVisibilityChange = () => {
+      if (document.hidden) switched = true;
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    setTimeout(() => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      result.textContent = (switched || document.hidden)
+        ? '앱이 열렸습니다. 이대로 쓰시면 됩니다.'
+        : '앱이 열리지 않았어요. 주소를 다시 확인해 주세요.';
+    }, 1800);
+
+    try {
+      window.location.href = chapterUrl('창세기', 1, pattern);
+    } catch (e) { /* 잘못된 주소면 아래 안내가 뜹니다 */ }
+  });
+
   document.getElementById('bibleUrlResetBtn').addEventListener('click', () => {
     bibleUrlInput.value = DEFAULT_BIBLE_URL;
     bibleAppUrlInput.value = '';

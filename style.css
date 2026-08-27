@@ -1,30 +1,19 @@
+/* 기기 설정과 상관없이 항상 어두운 화면으로 엽니다. */
 :root {
-  --bg: #faf7f2;
-  --surface: #ffffff;
-  --border: #e8e1d6;
-  --text: #3a332a;
-  --text-muted: #8a7f6f;
-  --primary: #a97155;
-  --primary-dark: #8a5a41;
-  --accent: #6f8f6a;
-  --danger: #c0645a;
+  color-scheme: dark;
+  --bg: #1c1a17;
+  --surface: #262320;
+  --border: #3a352d;
+  --text: #ece6da;
+  --text-muted: #a89b86;
+  --primary: #c98a63;
+  --primary-dark: #e0a17a;
+  --accent: #8fb08a;
+  --danger: #e08277;
+  --on-primary: #221b15;
+  --highlight: rgba(201, 138, 99, 0.14);
   --radius: 14px;
-  --shadow: 0 2px 10px rgba(90, 70, 40, 0.08);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1c1a17;
-    --surface: #262320;
-    --border: #3a352d;
-    --text: #ece6da;
-    --text-muted: #a89b86;
-    --primary: #c98a63;
-    --primary-dark: #e0a17a;
-    --accent: #8fb08a;
-    --danger: #e08277;
-    --shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-  }
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 
 * { box-sizing: border-box; }
@@ -63,7 +52,7 @@ body {
 .install-btn {
   margin-top: 14px;
   background: var(--primary);
-  color: #fff;
+  color: var(--on-primary);
   border: none;
   border-radius: 999px;
   padding: 9px 18px;
@@ -117,7 +106,7 @@ body {
 }
 .btn:active { transform: scale(0.97); }
 .btn:disabled { opacity: 0.45; cursor: default; }
-.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary { background: var(--primary); color: var(--on-primary); }
 .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
 .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
 
@@ -149,7 +138,7 @@ body {
   font-weight: 600;
   text-decoration: none;
 }
-.chapter-link:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+.chapter-link:hover { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
 
 .bible-source { margin-top: 16px; text-align: left; }
 .bible-source summary {
@@ -178,6 +167,21 @@ body {
   font-size: 11.5px;
   font-weight: 600;
 }
+.bible-source-tip {
+  margin: 7px 0 0;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.bible-source-test {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.bible-source-test .btn { padding: 8px 14px; font-size: 12.5px; }
+.bible-source-test-result { color: var(--text-muted); font-size: 11.5px; }
 .bible-source input {
   width: 100%;
   padding: 9px 11px;
@@ -240,7 +244,7 @@ body {
   font-size: 13.5px;
 }
 .reading-list li:last-child { border-bottom: none; }
-.reading-list li.current { background: rgba(169, 113, 85, 0.08); }
+.reading-list li.current { background: var(--highlight); }
 .reading-list li.done .reading-label { color: var(--text-muted); text-decoration: line-through; }
 .reading-list input[type="checkbox"] { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--primary); }
 .reading-day { color: var(--text-muted); font-size: 12px; flex-shrink: 0; width: 46px; }
@@ -329,7 +333,7 @@ body {
   font-size: 13px;
   cursor: pointer;
 }
-.filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.filter-btn.active { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
 
 .pending-verse {
   margin: 0;
@@ -395,7 +399,7 @@ body {
   font-size: 12.5px;
   cursor: pointer;
 }
-.verse-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.verse-chip.active { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
 
 .verse-results { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; }
 .verse-result {
