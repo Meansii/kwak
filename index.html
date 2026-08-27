@@ -142,6 +142,26 @@
     </div>
   </div>
 
+  <!-- 새 창 열기가 막혔을 때 -->
+  <div id="linkModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="linkModalTitle">
+      <div class="modal-header">
+        <h3 id="linkModalTitle">주소 복사해서 열기</h3>
+        <button type="button" class="modal-close" data-close-modal aria-label="닫기">✕</button>
+      </div>
+      <p class="link-fallback-note">
+        지금 보고 계신 미리보기 화면에서는 다른 사이트를 바로 열 수 없어요.
+        아래 <strong id="linkFallbackLabel"></strong> 주소를 복사해서 브라우저에 붙여넣어 주세요.
+      </p>
+      <input type="text" id="linkFallbackUrl" class="link-fallback-url" readonly>
+      <div class="link-fallback-actions">
+        <button type="button" id="linkFallbackCopyBtn" class="btn btn-primary">주소 복사</button>
+        <span id="linkFallbackCopied" class="link-fallback-copied" hidden>복사했습니다</span>
+      </div>
+    </div>
+  </div>
+
   <script src="verses.js"></script>
   <script src="app.js"></script>
 </body>

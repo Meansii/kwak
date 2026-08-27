@@ -416,6 +416,25 @@ body {
   color: var(--text-muted);
 }
 
+.link-fallback-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+.link-fallback-url {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+.link-fallback-actions { display: flex; align-items: center; gap: 10px; }
+.link-fallback-copied { color: var(--accent); font-size: 12px; font-weight: 600; }
+
 .prayer-list { list-style: none; margin: 0; padding: 0; }
 .prayer-item {
   background: var(--surface);

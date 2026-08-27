@@ -140,6 +140,31 @@
       .replace(/\{chapter\}/g, String(chapter));
   }
 
+  // 미리보기(샌드박스) 안에서는 새 창 열기가 조용히 차단됩니다.
+  // 그때는 주소를 띄워서 복사해 갈 수 있게 합니다.
+  function openChapter(url, label) {
+    // 'noopener' 를 옵션으로 넘기면 열기에 성공해도 null 이 돌아와서, 열렸는지 알 수 없습니다.
+    let win = null;
+    try {
+      win = window.open(url, '_blank');
+    } catch (e) {
+      win = null;
+    }
+    if (win) {
+      try { win.opener = null; } catch (e) { /* 교차 출처면 건드릴 수 없습니다 */ }
+      return;
+    }
+    showLinkFallback(url, label);
+  }
+
+  function showLinkFallback(url, label) {
+    document.getElementById('linkFallbackLabel').textContent = label;
+    const field = document.getElementById('linkFallbackUrl');
+    field.value = url;
+    document.getElementById('linkFallbackCopied').hidden = true;
+    document.getElementById('linkModal').hidden = false;
+  }
+
   function renderChapterLinks(dayChapters) {
     const wrap = document.getElementById('todayChapters');
     wrap.innerHTML = '';
@@ -149,16 +174,39 @@
     const singleBook = new Set(dayChapters.map((c) => c.book)).size === 1;
     const frag = document.createDocumentFragment();
     dayChapters.forEach(({ book, chapter }) => {
+      const url = chapterUrl(book, chapter);
+      const label = `${book} ${chapter}장`;
       const a = document.createElement('a');
       a.className = 'chapter-link';
-      a.href = chapterUrl(book, chapter);
+      a.href = url;
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
-      a.textContent = singleBook ? `${chapter}장` : `${book} ${chapter}장`;
+      a.textContent = singleBook ? `${chapter}장` : label;
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        openChapter(url, label);
+      });
       frag.appendChild(a);
     });
     wrap.appendChild(frag);
   }
+
+  document.getElementById('linkModal').querySelectorAll('[data-close-modal]').forEach((el) => {
+    el.addEventListener('click', () => { document.getElementById('linkModal').hidden = true; });
+  });
+  document.getElementById('linkFallbackUrl').addEventListener('focus', (e) => e.target.select());
+  document.getElementById('linkFallbackCopyBtn').addEventListener('click', async () => {
+    const field = document.getElementById('linkFallbackUrl');
+    field.select();
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(field.value);
+      ok = true;
+    } catch (e) {
+      try { ok = document.execCommand('copy'); } catch (e2) { ok = false; }
+    }
+    document.getElementById('linkFallbackCopied').hidden = !ok;
+  });
 
   bibleUrlInput.value = bibleUrlPattern();
   bibleUrlInput.addEventListener('change', () => {
