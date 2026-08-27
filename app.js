@@ -6,6 +6,7 @@
     sessions: 'kwak_prayer_sessions',
     prayers: 'kwak_prayer_requests',
     bibleUrl: 'kwak_bible_url_pattern',
+    bibleAppUrl: 'kwak_bible_app_url_pattern',
   };
 
   const CHAPTERS_PER_DAY = 5;
@@ -129,20 +130,58 @@
     }
   }
 
-  function saveBibleUrl(value) {
-    try { localStorage.setItem(STORAGE_KEYS.bibleUrl, value); } catch (e) { /* storage unavailable */ }
+  function saveBibleUrl(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) { /* storage unavailable */ }
   }
 
-  function chapterUrl(book, chapter) {
-    return bibleUrlPattern()
+  function bibleAppUrlPattern() {
+    try {
+      return localStorage.getItem(STORAGE_KEYS.bibleAppUrl) || '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function chapterUrl(book, chapter, pattern) {
+    const template = pattern === undefined ? bibleUrlPattern() : pattern;
+    if (!template) return '';
+    return template
       .replace(/\{usfm\}/g, BOOK_USFM.get(book) || '')
       .replace(/\{book\}/g, encodeURIComponent(book))
       .replace(/\{chapter\}/g, String(chapter));
   }
 
+  // 앱 스킴이 설정돼 있으면 먼저 앱을 열어 보고, 아무 일도 안 일어나면 웹으로 넘어갑니다.
+  function openChapter(appUrl, webUrl, label) {
+    if (!appUrl) {
+      openWeb(webUrl, label);
+      return;
+    }
+
+    let switched = false;
+    const onVisibilityChange = () => {
+      if (document.hidden) switched = true; // 앱으로 넘어가면 이 화면은 숨겨집니다.
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    const timer = setTimeout(() => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      if (switched || document.hidden) return;
+      openWeb(webUrl, label);
+    }, 1500);
+
+    try {
+      window.location.href = appUrl;
+    } catch (e) {
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      openWeb(webUrl, label);
+    }
+  }
+
   // 미리보기(샌드박스) 안에서는 새 창 열기가 조용히 차단됩니다.
   // 그때는 주소를 띄워서 복사해 갈 수 있게 합니다.
-  function openChapter(url, label) {
+  function openWeb(url, label) {
     // 'noopener' 를 옵션으로 넘기면 열기에 성공해도 null 이 돌아와서, 열렸는지 알 수 없습니다.
     let win = null;
     try {
@@ -174,17 +213,18 @@
     const singleBook = new Set(dayChapters.map((c) => c.book)).size === 1;
     const frag = document.createDocumentFragment();
     dayChapters.forEach(({ book, chapter }) => {
-      const url = chapterUrl(book, chapter);
+      const webUrl = chapterUrl(book, chapter);
+      const appUrl = chapterUrl(book, chapter, bibleAppUrlPattern());
       const label = `${book} ${chapter}장`;
       const a = document.createElement('a');
       a.className = 'chapter-link';
-      a.href = url;
+      a.href = webUrl;
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
       a.textContent = singleBook ? `${chapter}장` : label;
       a.addEventListener('click', (e) => {
         e.preventDefault();
-        openChapter(url, label);
+        openChapter(appUrl, webUrl, label);
       });
       frag.appendChild(a);
     });
@@ -208,16 +248,28 @@
     document.getElementById('linkFallbackCopied').hidden = !ok;
   });
 
+  const bibleAppUrlInput = document.getElementById('bibleAppUrlInput');
+
   bibleUrlInput.value = bibleUrlPattern();
+  bibleAppUrlInput.value = bibleAppUrlPattern();
+
   bibleUrlInput.addEventListener('change', () => {
     const value = bibleUrlInput.value.trim() || DEFAULT_BIBLE_URL;
     bibleUrlInput.value = value;
-    saveBibleUrl(value);
+    saveBibleUrl(STORAGE_KEYS.bibleUrl, value);
+    renderBibleTab();
+  });
+  bibleAppUrlInput.addEventListener('change', () => {
+    const value = bibleAppUrlInput.value.trim();
+    bibleAppUrlInput.value = value;
+    saveBibleUrl(STORAGE_KEYS.bibleAppUrl, value);
     renderBibleTab();
   });
   document.getElementById('bibleUrlResetBtn').addEventListener('click', () => {
     bibleUrlInput.value = DEFAULT_BIBLE_URL;
-    saveBibleUrl(DEFAULT_BIBLE_URL);
+    bibleAppUrlInput.value = '';
+    saveBibleUrl(STORAGE_KEYS.bibleUrl, DEFAULT_BIBLE_URL);
+    saveBibleUrl(STORAGE_KEYS.bibleAppUrl, '');
     renderBibleTab();
   });
 

@@ -38,11 +38,18 @@
           <details class="bible-source">
             <summary>성경 앱 설정</summary>
             <p class="bible-source-help">
-              장을 누르면 <strong>개역개정(NKRV)</strong>으로 열립니다. 다른 번역본이나 다른 성경 앱을 쓰시면
-              아래 주소를 바꿔 주세요. <code>{usfm}</code>(예: GEN), <code>{book}</code>(예: 창세기),
+              장을 누르면 <strong>개역개정(NKRV)</strong>으로 열립니다.
+              <code>{usfm}</code>(예: GEN), <code>{book}</code>(예: 창세기),
               <code>{chapter}</code>(예: 1) 자리에 각 장이 채워집니다.
             </p>
+
+            <label class="bible-source-label" for="bibleAppUrlInput">성경 앱으로 열기 (비워두면 웹으로)</label>
+            <input type="text" id="bibleAppUrlInput" spellcheck="false" autocomplete="off"
+                   placeholder="예: youversion://bible?reference={usfm}.{chapter}.NKRV">
+
+            <label class="bible-source-label" for="bibleUrlInput">앱이 없을 때 열 웹 주소</label>
             <input type="url" id="bibleUrlInput" spellcheck="false" autocomplete="off">
+
             <button type="button" id="bibleUrlResetBtn" class="btn-link">기본값으로</button>
           </details>
         </div>
