@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>말씀과 기도</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1>말씀과 기도</h1>
+      <p class="subtitle">매일 성경 5장, 기도 1시간</p>
+    </header>
+
+    <main class="app-main">
+      <!-- 성경읽기 -->
+      <section id="tab-bible" class="tab-panel active">
+        <div class="card today-card">
+          <div class="today-card-label">오늘 읽을 말씀</div>
+          <div id="todayReading" class="today-reading">-</div>
+          <button id="todayCompleteBtn" class="btn btn-primary">오늘 읽기 완료</button>
+        </div>
+
+        <div class="progress-block">
+          <div class="progress-info">
+            <span id="progressText">0 / 0일차</span>
+            <span id="progressPercent">0%</span>
+          </div>
+          <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+        </div>
+
+        <div class="section-title-row">
+          <h2>전체 통독표</h2>
+          <button id="resetPlanBtn" class="btn-link">초기화</button>
+        </div>
+        <ul id="readingList" class="reading-list"></ul>
+      </section>
+
+      <!-- 기도 타이머 -->
+      <section id="tab-timer" class="tab-panel">
+        <div class="card timer-card">
+          <div class="timer-display" id="timerDisplay">60:00</div>
+          <div class="timer-set-row" id="timerSetRow">
+            <label for="timerMinutes">시간 설정 (분)</label>
+            <input type="number" id="timerMinutes" min="1" max="180" value="60">
+          </div>
+          <div class="timer-buttons">
+            <button id="timerStartBtn" class="btn btn-primary">시작</button>
+            <button id="timerPauseBtn" class="btn btn-secondary" disabled>일시정지</button>
+            <button id="timerResetBtn" class="btn btn-secondary">초기화</button>
+          </div>
+        </div>
+
+        <div class="section-title-row">
+          <h2>기도 기록</h2>
+          <button id="clearSessionsBtn" class="btn-link">기록 지우기</button>
+        </div>
+        <ul id="sessionList" class="session-list"></ul>
+        <p id="sessionEmpty" class="empty-msg">아직 완료한 기도 기록이 없습니다.</p>
+      </section>
+
+      <!-- 기도제목 -->
+      <section id="tab-prayer" class="tab-panel">
+        <form id="prayerForm" class="prayer-form">
+          <textarea id="prayerInput" placeholder="기도제목을 적어주세요..." rows="2" required></textarea>
+          <button type="submit" class="btn btn-primary">추가</button>
+        </form>
+
+        <div class="filter-row">
+          <button class="filter-btn active" data-filter="all">전체</button>
+          <button class="filter-btn" data-filter="active">기도중</button>
+          <button class="filter-btn" data-filter="answered">응답됨</button>
+        </div>
+
+        <ul id="prayerList" class="prayer-list"></ul>
+        <p id="prayerEmpty" class="empty-msg">등록된 기도제목이 없습니다.</p>
+      </section>
+    </main>
+
+    <nav class="tab-bar">
+      <button class="tab-btn active" data-tab="tab-bible">
+        <span class="tab-icon">📖</span><span>성경읽기</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-timer">
+        <span class="tab-icon">⏱️</span><span>기도타이머</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-prayer">
+        <span class="tab-icon">🙏</span><span>기도제목</span>
+      </button>
+    </nav>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
