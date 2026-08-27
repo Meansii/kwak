@@ -204,9 +204,26 @@
     document.getElementById('linkModal').hidden = false;
   }
 
+  function renderTargetNote(visible) {
+    const note = document.getElementById('bibleTargetNote');
+    note.hidden = !visible;
+    if (!visible) return;
+    const appPattern = bibleAppUrlPattern();
+    let where;
+    if (appPattern) {
+      where = appPattern.replace(/:.*$/, '');
+      document.getElementById('bibleTargetText').textContent = `지금은 ${where} 앱으로 열립니다`;
+    } else {
+      let host = '웹';
+      try { host = new URL(bibleUrlPattern()).hostname.replace(/^www\./, ''); } catch (e) { /* 형식이 달라도 넘어갑니다 */ }
+      document.getElementById('bibleTargetText').textContent = `지금은 웹(${host})으로 열립니다`;
+    }
+  }
+
   function renderChapterLinks(dayChapters) {
     const wrap = document.getElementById('todayChapters');
     wrap.innerHTML = '';
+    renderTargetNote(Boolean(dayChapters));
     if (!dayChapters) return;
 
     // 한 책 안에서만 읽는 날은 "1장"처럼 짧게, 책이 넘어가는 날은 책 이름까지 보여 줍니다.
@@ -265,6 +282,13 @@
     saveBibleUrl(STORAGE_KEYS.bibleAppUrl, value);
     renderBibleTab();
   });
+  document.getElementById('bibleTargetChangeBtn').addEventListener('click', () => {
+    const panel = document.querySelector('.bible-source');
+    panel.open = true;
+    panel.scrollIntoView({ block: 'nearest' });
+    bibleAppUrlInput.focus();
+  });
+
   document.getElementById('bibleAppTestBtn').addEventListener('click', () => {
     const result = document.getElementById('bibleAppTestResult');
     const pattern = bibleAppUrlInput.value.trim();

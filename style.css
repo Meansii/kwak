@@ -140,6 +140,12 @@ body {
 }
 .chapter-link:hover { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
 
+.bible-target-note {
+  margin: -8px 0 14px;
+  color: var(--text-muted);
+  font-size: 11.5px;
+}
+.bible-target-note .btn-link { font-size: 11.5px; }
 .bible-source { margin-top: 16px; text-align: left; }
 .bible-source summary {
   cursor: pointer;
