@@ -286,14 +286,24 @@
   bibleUrlInput.value = bibleUrlPattern();
   bibleAppUrlInput.value = bibleAppUrlPattern();
 
+  // 성경 앱에서 복사한 주소(예: .../GEN.1.NKRV)를 그대로 붙여넣어도 되게,
+  // 책 약어와 장 번호를 자동으로 자리표시자로 바꿔 줍니다.
+  function toChapterPattern(url) {
+    if (!url || url.indexOf('{') !== -1) return url;
+    const replaced = url.replace(/\/([1-3]?[A-Z]{2,3})\.(\d+)/, '/{usfm}.{chapter}');
+    if (replaced !== url) return replaced;
+    // 한글 책 이름 + 장 번호 형태도 받아 줍니다.
+    return url.replace(/([가-힣]{2,7})\s*(\d+)\s*장/, '{book} {chapter}장');
+  }
+
   bibleUrlInput.addEventListener('change', () => {
-    const value = bibleUrlInput.value.trim();
+    const value = toChapterPattern(bibleUrlInput.value.trim());
     bibleUrlInput.value = value;
     saveBibleUrl(STORAGE_KEYS.bibleUrl, value);
     renderBibleTab();
   });
   bibleAppUrlInput.addEventListener('change', () => {
-    const value = bibleAppUrlInput.value.trim();
+    const value = toChapterPattern(bibleAppUrlInput.value.trim());
     bibleAppUrlInput.value = value;
     saveBibleUrl(STORAGE_KEYS.bibleAppUrl, value);
     renderBibleTab();

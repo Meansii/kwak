@@ -1,4 +1,4 @@
-const CACHE_NAME = 'malsseum-gido-v9';
+const CACHE_NAME = 'malsseum-gido-v10';
 const APP_SHELL = [
   './',
   './index.html',
