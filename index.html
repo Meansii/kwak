@@ -2,8 +2,20 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>말씀과 기도</title>
+<meta name="description" content="매일 성경 5장 통독, 1시간 기도 타이머, 기도제목 관리를 위한 개인경건 앱">
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#a97155">
+
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="말씀과 기도">
+
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,6 +23,7 @@
     <header class="app-header">
       <h1>말씀과 기도</h1>
       <p class="subtitle">매일 성경 5장, 기도 1시간</p>
+      <button id="installBtn" class="install-btn" hidden>📲 홈 화면에 앱 추가</button>
     </header>
 
     <main class="app-main">
