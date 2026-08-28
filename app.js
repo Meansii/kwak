@@ -75,6 +75,8 @@
 
   const READING_PLAN = buildReadingPlan();
   const BOOK_USFM = new Map(BIBLE_BOOKS.map(([name], i) => [name, USFM_CODES[i]]));
+  // 창세기=1 … 요한계시록=66. 책을 번호로 받는 사이트(갓피아 등)에 씁니다.
+  const BOOK_NUMBER = new Map(BIBLE_BOOKS.map(([name], i) => [name, i + 1]));
 
   function loadJSON(key, fallback) {
     try {
@@ -149,6 +151,7 @@
     if (!template) return '';
     return template
       .replace(/\{usfm\}/g, BOOK_USFM.get(book) || '')
+      .replace(/\{booknum\}/g, String(BOOK_NUMBER.get(book) || ''))
       .replace(/\{book\}/g, encodeURIComponent(book))
       .replace(/\{chapter\}/g, String(chapter));
   }
