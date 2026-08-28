@@ -1106,6 +1106,86 @@
     });
   });
 
+  // ---------- 백업 / 복원 ----------
+  const backupText = document.getElementById('backupText');
+  const backupResult = document.getElementById('backupResult');
+
+  function showBackupResult(message) {
+    backupResult.textContent = message;
+    backupResult.hidden = false;
+  }
+
+  function buildBackup() {
+    return {
+      app: 'malsseum-gido',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      prayers,
+      sessions,
+      completedDays,
+      bibleUrl: bibleUrlPattern(),
+      bibleAppUrl: bibleAppUrlPattern(),
+    };
+  }
+
+  document.getElementById('backupExportBtn').addEventListener('click', () => {
+    backupText.value = JSON.stringify(buildBackup());
+    backupText.focus();
+    backupText.select();
+    showBackupResult(`기도제목 ${prayers.length}개, 기도 기록 ${sessions.length}개, 통독 ${completedDays.length}일치를 담았습니다. 복사해서 보관해 주세요.`);
+  });
+
+  document.getElementById('backupCopyBtn').addEventListener('click', async () => {
+    if (!backupText.value) {
+      showBackupResult('먼저 백업 만들기를 눌러 주세요.');
+      return;
+    }
+    backupText.select();
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(backupText.value);
+      ok = true;
+    } catch (e) {
+      try { ok = document.execCommand('copy'); } catch (e2) { ok = false; }
+    }
+    showBackupResult(ok ? '복사했습니다. 메모장에 붙여넣어 두세요.' : '복사가 안 되네요. 글을 길게 눌러 직접 복사해 주세요.');
+  });
+
+  document.getElementById('backupImportBtn').addEventListener('click', () => {
+    const raw = backupText.value.trim();
+    if (!raw) {
+      showBackupResult('백업해 둔 글을 먼저 붙여넣어 주세요.');
+      return;
+    }
+
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {
+      showBackupResult('백업 글이 온전하지 않습니다. 처음부터 끝까지 다 붙여넣었는지 확인해 주세요.');
+      return;
+    }
+    if (!data || data.app !== 'malsseum-gido' || !Array.isArray(data.prayers)) {
+      showBackupResult('이 앱의 백업 글이 아닙니다.');
+      return;
+    }
+    if (!confirm(`지금 기록을 백업본으로 바꿉니다.\n기도제목 ${data.prayers.length}개로 되돌릴까요?`)) return;
+
+    prayers = data.prayers;
+    sessions = Array.isArray(data.sessions) ? data.sessions : [];
+    completedDays = Array.isArray(data.completedDays) ? data.completedDays : [];
+    saveJSON(STORAGE_KEYS.prayers, prayers);
+    saveJSON(STORAGE_KEYS.sessions, sessions);
+    saveJSON(STORAGE_KEYS.completedDays, completedDays);
+    if (typeof data.bibleUrl === 'string') saveBibleUrl(STORAGE_KEYS.bibleUrl, data.bibleUrl);
+    if (typeof data.bibleAppUrl === 'string') saveBibleUrl(STORAGE_KEYS.bibleAppUrl, data.bibleAppUrl);
+
+    renderPrayers();
+    renderSessions();
+    renderBibleTab();
+    showBackupResult(`복원했습니다. 기도제목 ${prayers.length}개를 되찾았습니다.`);
+  });
+
   // ---------- Tab navigation ----------
   document.querySelectorAll('.tab-btn').forEach((btn) => {
     btn.addEventListener('click', () => {

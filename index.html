@@ -135,6 +135,24 @@
 
         <ul id="prayerList" class="prayer-list"></ul>
         <p id="prayerEmpty" class="empty-msg">등록된 기도제목이 없습니다.</p>
+
+        <details class="backup-box">
+          <summary>백업 / 복원</summary>
+          <p class="backup-help">
+            기록은 이 브라우저 안에만 있습니다. 아래 <strong>백업 만들기</strong>를 누르면 나오는 글을
+            메모장이나 카카오톡 "나에게 보내기"에 붙여 두세요. 나중에 그 글을 여기에 붙여넣고
+            <strong>복원하기</strong>를 누르면 그대로 돌아옵니다.
+          </p>
+          <textarea id="backupText" class="backup-text" rows="5" spellcheck="false"
+                    placeholder="여기에 백업한 글을 붙여넣고 복원하기를 누르세요"></textarea>
+          <div class="backup-actions">
+            <button type="button" id="backupExportBtn" class="btn btn-secondary">백업 만들기</button>
+            <button type="button" id="backupCopyBtn" class="btn btn-secondary">복사</button>
+            <button type="button" id="backupImportBtn" class="btn btn-primary">복원하기</button>
+          </div>
+          <p id="backupResult" class="backup-result" hidden></p>
+        </details>
+
       </section>
     </main>
 
