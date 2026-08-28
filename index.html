@@ -192,6 +192,28 @@
     </div>
   </div>
 
+  <!-- 말씀 직접 쓰기 -->
+  <div id="verseEditModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="verseEditTitle">
+      <div class="modal-header">
+        <h3 id="verseEditTitle">말씀 직접 쓰기</h3>
+        <button type="button" class="modal-close" data-close-modal aria-label="닫기">✕</button>
+      </div>
+      <label class="verse-edit-label" for="verseEditRef">말씀 (여러 구절도 괜찮습니다)</label>
+      <input type="text" id="verseEditRef" class="verse-edit-ref" autocomplete="off"
+             placeholder="예: 빌립보서 4:6-7, 시편 23:1">
+      <label class="verse-edit-label" for="verseEditText">본문 (안 적으셔도 됩니다)</label>
+      <textarea id="verseEditText" class="verse-edit-text" rows="7"
+                placeholder="본문을 적어주세요. 여러 절은 줄을 바꿔 적으시면 그대로 보입니다."></textarea>
+      <div class="verse-edit-actions">
+        <button type="button" id="verseEditSearchBtn" class="btn-link">말씀 찾기</button>
+        <button type="button" id="verseEditClearBtn" class="btn-link">말씀 지우기</button>
+        <button type="button" id="verseEditSaveBtn" class="btn btn-primary">저장</button>
+      </div>
+    </div>
+  </div>
+
   <script src="verses.js"></script>
   <script src="app.js"></script>
 </body>

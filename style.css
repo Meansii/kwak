@@ -355,6 +355,7 @@ body {
   color: var(--text-muted);
   font-size: 12.5px;
   line-height: 1.55;
+  white-space: pre-wrap;
 }
 
 /* 말씀 찾기 모달 */
@@ -491,6 +492,34 @@ body {
   word-break: break-word;
 }
 
+.verse-edit-label {
+  display: block;
+  margin: 4px 0 -2px;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.verse-edit-ref,
+.verse-edit-text {
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.verse-edit-text { resize: vertical; }
+.verse-edit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+.verse-edit-actions .btn-link { margin-right: auto; }
+.verse-edit-actions .btn-link + .btn-link { margin-right: 0; }
 .prayer-item-verse-text {
   margin: -3px 0 9px;
   padding-left: 11px;
@@ -498,6 +527,7 @@ body {
   color: var(--text-muted);
   font-size: 12.5px;
   line-height: 1.6;
+  white-space: pre-wrap;
 }
 .prayer-item-meta {
   display: flex;

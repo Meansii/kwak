@@ -994,7 +994,9 @@
     el.addEventListener('click', closeVerseSearch);
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !verseModal.hidden) closeVerseSearch();
+    if (e.key !== 'Escape') return;
+    if (!verseEditModal.hidden) closeVerseEditor();
+    else if (!verseModal.hidden) closeVerseSearch();
   });
   verseSearchInput.addEventListener('input', renderVerseResults);
   document.getElementById('verseSearchBtn').addEventListener('click', () => openVerseSearch(null));
@@ -1004,18 +1006,65 @@
     pendingVerseText = '';
     renderPendingVerse();
   });
+  // ---------- 말씀 직접 쓰기 ----------
+  const verseEditModal = document.getElementById('verseEditModal');
+  const verseEditRef = document.getElementById('verseEditRef');
+  const verseEditText = document.getElementById('verseEditText');
+  let verseEditTargetId = null;
+
+  function openVerseEditor(targetId) {
+    verseEditTargetId = targetId || null;
+    let ref = '';
+    let text = '';
+    if (verseEditTargetId) {
+      const p = prayers.find((x) => x.id === verseEditTargetId) || {};
+      ref = p.verse || '';
+      text = p.verseText || '';
+    } else {
+      ref = document.getElementById('prayerVerseInput').value;
+      text = pendingVerseText;
+    }
+    verseEditRef.value = ref;
+    verseEditText.value = text;
+    verseEditModal.hidden = false;
+    verseEditRef.focus();
+  }
+
+  function closeVerseEditor() {
+    verseEditModal.hidden = true;
+    verseEditTargetId = null;
+  }
+
+  function saveVerseEditor(ref, text) {
+    verseTargetId = verseEditTargetId; // applyVerse 가 쓰는 대상과 맞춥니다.
+    applyVerse(ref, text);
+    closeVerseEditor();
+  }
+
+  verseEditModal.querySelectorAll('[data-close-modal]').forEach((el) => {
+    el.addEventListener('click', closeVerseEditor);
+  });
+  document.getElementById('verseEditSaveBtn').addEventListener('click', () => {
+    saveVerseEditor(verseEditRef.value.trim(), verseEditText.value.trim());
+  });
+  document.getElementById('verseEditClearBtn').addEventListener('click', () => {
+    saveVerseEditor('', '');
+  });
+  document.getElementById('verseEditSearchBtn').addEventListener('click', () => {
+    const target = verseEditTargetId;
+    closeVerseEditor();
+    openVerseSearch(target);
+  });
+
   document.getElementById('verseManualBtn').addEventListener('click', () => {
-    const seed = verseTargetId
-      ? (prayers.find((p) => p.id === verseTargetId) || {}).verse || ''
-      : document.getElementById('prayerVerseInput').value;
-    const input = prompt('관련 말씀을 직접 적어주세요 (예: 빌립보서 4:6)', seed);
-    if (input === null) return;
-    applyVerse(input.trim(), '');
+    const target = verseTargetId;
+    closeVerseSearch();
+    openVerseEditor(target);
   });
   renderVerseChips();
 
   function editVerse(id) {
-    openVerseSearch(id);
+    openVerseEditor(id);
   }
 
   function deletePrayer(id) {
