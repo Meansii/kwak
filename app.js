@@ -577,7 +577,15 @@
       const li = document.createElement('li');
       const date = new Date(s.date);
       const dateStr = `${date.getMonth() + 1}월 ${date.getDate()}일 ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-      li.innerHTML = `<span class="session-date">${dateStr}</span><span>${s.minutes}분 기도 완료</span>`;
+      const dateSpan = document.createElement('span');
+      dateSpan.className = 'session-date';
+      dateSpan.textContent = dateStr;
+      const minSpan = document.createElement('span');
+      minSpan.textContent = s.label
+        ? `${s.minutes}분 · ${s.label.length > 14 ? s.label.slice(0, 14) + '…' : s.label}`
+        : `${s.minutes}분 기도 완료`;
+      li.appendChild(dateSpan);
+      li.appendChild(minSpan);
       frag.appendChild(li);
     });
     list.appendChild(frag);
@@ -616,6 +624,7 @@
     });
 
     list.innerHTML = '';
+    if (activePrayerTimer) activePrayerTimer.displayEl = null; // 새로 그리면 참조가 끊깁니다.
     if (filtered.length === 0) {
       empty.style.display = 'block';
       return;
@@ -669,6 +678,7 @@
       deleteBtn.textContent = '삭제';
       deleteBtn.addEventListener('click', () => deletePrayer(p.id));
 
+      actions.appendChild(buildPrayerTimerControls(p));
       actions.appendChild(verseBtn);
       actions.appendChild(answerBtn);
       actions.appendChild(deleteBtn);
@@ -679,6 +689,155 @@
       frag.appendChild(li);
     });
     list.appendChild(frag);
+  }
+
+  // ---------- 기도제목별 타이머 ----------
+  const DEFAULT_PRAYER_MINUTES = 10;
+  const PRAYER_MINUTE_STEP = 5;
+  const PRAYER_MINUTES_MIN = 5;
+  const PRAYER_MINUTES_MAX = 120;
+
+  // 한 번에 하나만 돌아갑니다.
+  let activePrayerTimer = null;
+
+  function prayerMinutes(p) {
+    return p.minutes || DEFAULT_PRAYER_MINUTES;
+  }
+
+  function setPrayerMinutes(id, minutes) {
+    const p = prayers.find((x) => x.id === id);
+    if (!p || !minutes) return;
+    p.minutes = Math.min(PRAYER_MINUTES_MAX, Math.max(PRAYER_MINUTES_MIN, minutes));
+    saveJSON(STORAGE_KEYS.prayers, prayers);
+  }
+
+  function clearPrayerInterval() {
+    if (activePrayerTimer && activePrayerTimer.handle) clearInterval(activePrayerTimer.handle);
+  }
+
+  function tickPrayerTimer() {
+    const t = activePrayerTimer;
+    if (!t || !t.running) return;
+    t.remaining = (t.endAt - Date.now()) / 1000;
+    if (t.remaining <= 0) {
+      t.remaining = 0;
+      finishPrayerTimer();
+      return;
+    }
+    if (t.displayEl) t.displayEl.textContent = formatTime(t.remaining);
+  }
+
+  function startPrayerTimer(id) {
+    const p = prayers.find((x) => x.id === id);
+    if (!p) return;
+    clearPrayerInterval(); // 다른 기도제목이 돌고 있었다면 멈춥니다.
+    const total = prayerMinutes(p) * 60;
+    activePrayerTimer = {
+      id,
+      total,
+      remaining: total,
+      running: true,
+      endAt: Date.now() + total * 1000,
+      handle: setInterval(tickPrayerTimer, 250),
+      displayEl: null,
+    };
+    renderPrayers();
+  }
+
+  function pausePrayerTimer() {
+    const t = activePrayerTimer;
+    if (!t || !t.running) return;
+    clearPrayerInterval();
+    t.running = false;
+    t.handle = null;
+    renderPrayers();
+  }
+
+  function resumePrayerTimer() {
+    const t = activePrayerTimer;
+    if (!t || t.running) return;
+    t.endAt = Date.now() + t.remaining * 1000;
+    t.running = true;
+    t.handle = setInterval(tickPrayerTimer, 250);
+    renderPrayers();
+  }
+
+  function stopPrayerTimer() {
+    clearPrayerInterval();
+    activePrayerTimer = null;
+    renderPrayers();
+  }
+
+  function finishPrayerTimer() {
+    const t = activePrayerTimer;
+    clearPrayerInterval();
+    activePrayerTimer = null;
+    if (t) {
+      playChime();
+      const p = prayers.find((x) => x.id === t.id);
+      sessions.unshift({
+        date: new Date().toISOString(),
+        minutes: Math.round(t.total / 60),
+        label: p ? p.text : '',
+      });
+      sessions = sessions.slice(0, 50);
+      saveJSON(STORAGE_KEYS.sessions, sessions);
+      renderSessions();
+    }
+    renderPrayers();
+  }
+
+  function buildPrayerTimerControls(p) {
+    const frag = document.createDocumentFragment();
+    const running = activePrayerTimer && activePrayerTimer.id === p.id;
+
+    if (running) {
+      const display = document.createElement('span');
+      display.className = 'prayer-timer-display';
+      display.textContent = formatTime(activePrayerTimer.remaining);
+      activePrayerTimer.displayEl = display;
+
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'timer-btn';
+      toggle.textContent = activePrayerTimer.running ? '일시정지' : '계속';
+      toggle.addEventListener('click', () => {
+        if (activePrayerTimer.running) pausePrayerTimer(); else resumePrayerTimer();
+      });
+
+      const stop = document.createElement('button');
+      stop.type = 'button';
+      stop.className = 'timer-btn';
+      stop.textContent = '중지';
+      stop.addEventListener('click', stopPrayerTimer);
+
+      frag.appendChild(display);
+      frag.appendChild(toggle);
+      frag.appendChild(stop);
+      return frag;
+    }
+
+    const select = document.createElement('select');
+    select.className = 'prayer-timer-select';
+    select.setAttribute('aria-label', '기도 시간');
+    for (let m = PRAYER_MINUTES_MIN; m <= PRAYER_MINUTES_MAX; m += PRAYER_MINUTE_STEP) {
+      const opt = document.createElement('option');
+      opt.value = String(m);
+      opt.textContent = `${m}분`;
+      select.appendChild(opt);
+    }
+    select.value = String(prayerMinutes(p));
+    select.addEventListener('change', () => setPrayerMinutes(p.id, parseInt(select.value, 10)));
+
+    const start = document.createElement('button');
+    start.type = 'button';
+    start.className = 'timer-btn timer-btn-start';
+    start.textContent = '기도 시작';
+    start.addEventListener('click', () => startPrayerTimer(p.id));
+
+    frag.appendChild(select);
+    frag.appendChild(start);
+    return frag;
   }
 
   function toggleAnswered(id) {
@@ -876,6 +1035,7 @@
       text,
       verse: verseInput.value.trim(),
       verseText: pendingVerseText,
+      minutes: DEFAULT_PRAYER_MINUTES,
       createdAt: new Date().toISOString(),
       answered: false,
       answeredAt: null,
