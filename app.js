@@ -39,7 +39,7 @@
     'JAS', '1PE', '2PE', '1JN', '2JN', '3JN', 'JUD', 'REV',
   ];
 
-  const DEFAULT_BIBLE_URL = 'https://www.bible.com/bible/88/{usfm}.{chapter}.NKRV';
+  const DEFAULT_BIBLE_URL = 'https://www.godpia.com/read/reading.asp';
 
   function buildChapterSequence() {
     const seq = [];
@@ -218,6 +218,12 @@
       document.getElementById('bibleTargetText').textContent = '장을 눌러도 다른 앱이 열리지 않습니다';
       return;
     }
+    const activePattern = appPattern || bibleUrlPattern();
+    if (!PLACEHOLDER_RE.test(activePattern)) {
+      document.getElementById('bibleTargetText').textContent =
+        '이 사이트는 장으로 바로 갈 수 없어, 첫 화면만 열립니다';
+      return;
+    }
     let where;
     if (appPattern) {
       where = appPattern.replace(/:.*$/, '');
@@ -229,11 +235,31 @@
     }
   }
 
+  const PLACEHOLDER_RE = /\{(usfm|booknum|book|chapter)\}/;
+
   function renderChapterLinks(dayChapters) {
     const wrap = document.getElementById('todayChapters');
     wrap.innerHTML = '';
     renderTargetNote(Boolean(dayChapters));
     if (!dayChapters) return;
+
+    // 갓피아처럼 주소에 책·장이 안 들어가는 사이트는 장마다 링크를 나눠도 다 같은 곳으로 갑니다.
+    // 그럴 때는 버튼 하나만 보여 줍니다.
+    const activePattern = bibleAppUrlPattern() || bibleUrlPattern();
+    if (activePattern && !PLACEHOLDER_RE.test(activePattern)) {
+      const a = document.createElement('a');
+      a.className = 'chapter-link';
+      a.href = bibleUrlPattern() || '#';
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = '성경 열기';
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        openChapter(bibleAppUrlPattern(), bibleUrlPattern(), '성경');
+      });
+      wrap.appendChild(a);
+      return;
+    }
 
     // 한 책 안에서만 읽는 날은 "1장"처럼 짧게, 책이 넘어가는 날은 책 이름까지 보여 줍니다.
     const singleBook = new Set(dayChapters.map((c) => c.book)).size === 1;
