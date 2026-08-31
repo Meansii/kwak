@@ -25,6 +25,9 @@ function installIfNeeded() {
   line();
   console.log('  처음 실행이라 필요한 파일을 내려받습니다.');
   console.log('  3~5분 정도 걸립니다. 창을 닫지 말고 기다려 주세요.');
+  console.log('');
+  console.log('  ※ 이 창 안을 클릭하면 진행이 멈춥니다.');
+  console.log('    (제목에 "선택"이 뜬 경우 Esc 키를 누르면 다시 진행됩니다)');
   line();
   console.log('');
 
