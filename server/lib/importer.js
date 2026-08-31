@@ -88,7 +88,8 @@ function normalizeRow(row, mapping, opts = {}) {
   const submittedRaw = pick(row, mapping, 'submitted_at');
   const visitRaw = pick(row, mapping, 'visit_date');
   const submittedDate = parseDate(submittedRaw);
-  const visitDate = parseDate(visitRaw) || submittedDate || opts.defaultDate || '';
+  // 파일에 실제로 적힌 날짜만 쓴다. (아무 날짜도 없으면 빈 값으로 두고, 저장할 때만 기본값을 채운다)
+  const visitDate = parseDate(visitRaw) || submittedDate || '';
   const phoneRaw = pick(row, mapping, 'phone');
   return {
     submitted_at: submittedDate ? `${submittedDate} ${parseTime(submittedRaw)}`.trim() : '',
@@ -111,6 +112,11 @@ function normalizeRow(row, mapping, opts = {}) {
     photo_url: String(pick(row, mapping, 'photo_url')).trim(),
     privacy_agreed: mapping.privacy_agreed === null ? 0 : truthy(pick(row, mapping, 'privacy_agreed')),
   };
+}
+
+/** 이 줄에 방문 기록으로 남길 내용이 실제로 있는지 (없으면 고객만 등록한다) */
+function hasVisitInfo(item) {
+  return !!(item.visit_date || item.services || item.details || item.amount);
 }
 
 /** 같은 응답을 두 번 넣지 않기 위한 키. */
@@ -253,11 +259,10 @@ function commit(headers, rows, mapping, opts = {}) {
       }
 
       let visitId = null;
-      const hasVisitInfo = d.visit_date || d.services || d.amount || d.details;
-      if (hasVisitInfo) {
+      if (!opts.customersOnly && hasVisitInfo(d)) {
         visitId = insertVisit.run({
           customer_id: customerId,
-          visit_date: d.visit_date || (d.submitted_at || '').slice(0, 10) || new Date().toISOString().slice(0, 10),
+          visit_date: d.visit_date || opts.defaultDate || new Date().toISOString().slice(0, 10),
           visit_time: d.visit_time, services: d.services, details: d.details, designer: d.designer,
           amount: d.amount, pay_method: d.pay_method, memo: d.memo,
           import_key: it.key, created_at: now, updated_at: now,
@@ -265,9 +270,11 @@ function commit(headers, rows, mapping, opts = {}) {
         stats.visitsCreated++;
       }
 
-      for (const url of splitUrls(d.photo_url)) {
-        insertPhoto.run(customerId, visitId, url, now);
-        stats.photos++;
+      if (!opts.customersOnly) {
+        for (const url of splitUrls(d.photo_url)) {
+          insertPhoto.run(customerId, visitId, url, now);
+          stats.photos++;
+        }
       }
 
       insertResponse.run({
@@ -300,4 +307,4 @@ function rowToObject(headers, row) {
   return o;
 }
 
-module.exports = { FIELD_DEFS, splitUrls, FIELD_KEYS, guessMapping, normalizeRow, analyze, commit, importKey };
+module.exports = { FIELD_DEFS, splitUrls, hasVisitInfo, FIELD_KEYS, guessMapping, normalizeRow, analyze, commit, importKey };

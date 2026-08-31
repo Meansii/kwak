@@ -75,6 +75,7 @@ function readOptions(body) {
   return {
     matchByName: body.matchByName !== false,
     createOnAmbiguous: !!body.createOnAmbiguous,
+    customersOnly: !!body.customersOnly,   // 고객 정보만 등록하고 방문 기록은 만들지 않기
     defaultDate: body.defaultDate || todayISO(),
   };
 }

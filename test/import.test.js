@@ -99,6 +99,37 @@ test('이름만 같은 동명이인은 자동 연결하지 않고 확인 목록�
   assert.equal(pending[0].name, '이서연');
 });
 
+test('이름·연락처만 연결하면 방문 기록은 만들어지지 않는다', () => {
+  const headers = ['이름', '연락처'];
+  const rows = [['최윤아', '010-3131-4141'], ['오세훈', '010-5151-6161']];
+  const mapping = importer.guessMapping(headers);
+  assert.equal(mapping.name, 0);
+  assert.equal(mapping.phone, 1);
+
+  const r = importer.commit(headers, rows, mapping, { filename: '명단.csv' });
+  assert.equal(r.stats.customersCreated, 2);
+  assert.equal(r.stats.visitsCreated, 0, '날짜가 없는 명단은 방문 기록을 만들지 않는다');
+
+  const c = db.prepare('SELECT * FROM customers WHERE phone = ?').get('01031314141');
+  assert.equal(c.name, '최윤아');
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM visits WHERE customer_id = ?').get(c.id).n, 0);
+});
+
+test('customersOnly 를 켜면 시술 내용이 있어도 고객만 등록한다', () => {
+  const mapping = importer.guessMapping(HEADERS);
+  const rows = [['2025/09/01 오후 2:00:00', '강민지', '010-7070-8080', '여', '1997-01-05', '커트', '30000', '이수진', '', '예']];
+
+  const r = importer.commit(HEADERS, rows, mapping, { customersOnly: true });
+  assert.equal(r.stats.customersCreated, 1);
+  assert.equal(r.stats.visitsCreated, 0);
+  assert.equal(r.stats.photos, 0, '사진 링크도 가져오지 않는다');
+
+  const c = db.prepare('SELECT * FROM customers WHERE phone = ?').get('01070708080');
+  assert.equal(c.name, '강민지');
+  assert.equal(c.gender, '여', '이름·연락처 외 정보는 그대로 저장된다');
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM visits WHERE customer_id = ?').get(c.id).n, 0);
+});
+
 test('CSV 파서: 따옴표 안의 쉼표와 줄바꿈', () => {
   const rows = parseCSV('이름,메모\n"홍길동","펌, 염색\n다음엔 짧게"\n');
   assert.deepEqual(rows[1], ['홍길동', '펌, 염색\n다음엔 짧게']);

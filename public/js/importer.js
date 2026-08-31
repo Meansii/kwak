@@ -3,7 +3,7 @@
   'use strict';
   const { esc, toast, openModal, closeModal, confirmDialog } = window.ui;
 
-  const state = { step: 1, fields: [], preview: null, mapping: {}, analysis: null };
+  const state = { step: 1, fields: [], preview: null, mapping: {}, analysis: null, customersOnly: false };
 
   const STATUS_LABEL = {
     matched: ['기존 고객 연결', 'ok'],
@@ -116,7 +116,11 @@
           </table>
         </div>
       </details>
-      <div class="row mt" style="justify-content:flex-end">
+      <div class="checkbox mt">
+        <input type="checkbox" id="customersOnly" ${state.customersOnly ? 'checked' : ''}>
+        <label for="customersOnly">고객 정보(이름·연락처)만 등록하고 <b>방문 기록은 만들지 않기</b></label>
+      </div>
+      <div class="row" style="justify-content:flex-end">
         <button class="btn" id="back">다른 파일 선택</button>
         <button class="btn primary" id="next">다음: 결과 확인</button>
       </div>`;
@@ -138,13 +142,16 @@
     });
     refreshSamples();
 
+    box.querySelector('#customersOnly').onchange = (e) => { state.customersOnly = e.target.checked; };
     box.querySelector('#back').onclick = () => { state.step = 1; state.preview = null; render(root); };
     box.querySelector('#next').onclick = async () => {
       if (state.mapping.name === null || state.mapping.name === undefined) {
         return toast('고객 이름 열을 반드시 연결해 주세요.', 'err');
       }
       try {
-        state.analysis = await api.post('/api/import/analyze', { token: state.preview.token, mapping: state.mapping });
+        state.analysis = await api.post('/api/import/analyze', {
+          token: state.preview.token, mapping: state.mapping, customersOnly: state.customersOnly,
+        });
         state.step = 3;
         render(root);
       } catch (e) {
@@ -158,6 +165,7 @@
     const a = state.analysis;
     const c = a.counts;
     box.innerHTML = `
+      ${state.customersOnly ? '<div class="badge warn mb">고객 정보만 등록 — 방문 기록은 만들지 않습니다</div>' : ''}
       <div class="stat-grid mb">
         <div class="stat"><div class="label">기존 고객 연결</div><div class="value">${c.matched}건</div></div>
         <div class="stat"><div class="label">신규 고객</div><div class="value">${c.new}건</div></div>
@@ -192,7 +200,9 @@
       btn.disabled = true;
       btn.textContent = '저장 중…';
       try {
-        const r = await api.post('/api/import/commit', { token: state.preview.token, mapping: state.mapping });
+        const r = await api.post('/api/import/commit', {
+          token: state.preview.token, mapping: state.mapping, customersOnly: state.customersOnly,
+        });
         state.step = 1;
         state.preview = null;
         state.analysis = null;
