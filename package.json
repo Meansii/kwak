@@ -1,0 +1,25 @@
+{
+  "name": "kwak-hair-crm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "미용실 고객 관리 앱 - 고객정보/방문내역/시술기록/결제/사진, 구글폼 연동, 핸즈SOS 내보내기",
+  "type": "commonjs",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.4.1",
+    "exceljs": "^4.4.0",
+    "express": "^5.1.0",
+    "multer": "^2.0.2"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
+  }
+}
