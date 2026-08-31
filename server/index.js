@@ -104,7 +104,8 @@ function printStartupGuide() {
   }
 }
 
-if (require.main === module) {
+/** 서버를 켠다. (scripts/start.js 에서도 이 함수를 부른다) */
+function start() {
   const server = app.listen(PORT, HOST, printStartupGuide);
   server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
@@ -115,6 +116,10 @@ if (require.main === module) {
     }
     process.exit(1);
   });
+  return server;
 }
 
+if (require.main === module) start();
+
 module.exports = app;
+module.exports.start = start;

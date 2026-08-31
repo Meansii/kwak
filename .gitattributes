@@ -1,2 +1,10 @@
-# Auto detect text files and perform LF normalization
+# 기본: 텍스트 파일 줄바꿈 자동 정규화
 * text=auto
+
+# 윈도우 배치파일은 반드시 CRLF + ASCII 상태 그대로 보관한다.
+# (git 이 손대면 명령창에서 명령어가 깨져 실행되지 않는다)
+*.bat -text
+
+# 맥/리눅스 실행 스크립트는 LF 여야 한다
+*.command text eol=lf
+*.sh text eol=lf
