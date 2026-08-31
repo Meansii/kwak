@@ -87,7 +87,30 @@
     }
   }
   function saveJSON(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      showStorageWarning(); // 저장이 막혀 있으면 조용히 넘기지 않고 알립니다.
+    }
+  }
+
+  // 아이폰 사파리는 다른 사이트 안에 끼워진 화면(아티팩트 미리보기 등)의 저장을 막습니다.
+  // 그런 곳에서는 무엇을 적어도 앱을 닫는 순간 사라지므로, 처음부터 알려 줍니다.
+  function storageWorks() {
+    try {
+      const probe = '__kwak_probe__';
+      localStorage.setItem(probe, '1');
+      const ok = localStorage.getItem(probe) === '1';
+      localStorage.removeItem(probe);
+      return ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function showStorageWarning() {
+    const el = document.getElementById('storageWarning');
+    if (el) el.hidden = false;
   }
 
   // ---------- Bible reading tab ----------
@@ -1197,6 +1220,8 @@
   });
 
   // ---------- Init ----------
+  if (!storageWorks()) showStorageWarning();
+
   renderBibleTab();
   renderTimer();
   renderSessions();
