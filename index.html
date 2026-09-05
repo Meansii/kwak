@@ -149,6 +149,8 @@
             기록은 이 브라우저 안에만 있습니다. 아래 <strong>백업 만들기</strong>를 누르면 나오는 글을
             메모장이나 카카오톡 "나에게 보내기"에 붙여 두세요. 나중에 그 글을 여기에 붙여넣고
             <strong>복원하기</strong>를 누르면 그대로 돌아옵니다.
+            찬양 곡 이름·키·빠르기와 콘티도 함께 담깁니다. 다만 <strong>악보 사진은 담기지 않습니다</strong> —
+            사진은 갤러리에 그대로 있으니 다시 불러오시면 됩니다.
           </p>
           <textarea id="backupText" class="backup-text" rows="5" spellcheck="false"
                     placeholder="여기에 백업한 글을 붙여넣고 복원하기를 누르세요"></textarea>
@@ -161,6 +163,89 @@
         </details>
 
       </section>
+
+      <!-- 찬양 악보 / 콘티 -->
+      <section id="tab-worship" class="tab-panel">
+        <div class="seg-row">
+          <button type="button" class="seg-btn active" data-worship-view="songs">🎼 악보</button>
+          <button type="button" class="seg-btn" data-worship-view="setlists">📋 콘티</button>
+        </div>
+
+        <div id="worshipSongsView">
+          <div class="card import-card">
+            <p class="import-help">
+              휴대폰 <strong>갤러리</strong>에서 악보 사진을 골라 담아 두면, 키별로 정리되고 콘티에 바로 쓸 수 있습니다.
+              여러 장을 한 번에 고를 수 있습니다.
+            </p>
+            <label class="check-line">
+              <input type="checkbox" id="mergePagesCheck">
+              <span>고른 사진을 <strong>한 곡</strong>으로 묶기 (2장짜리 악보일 때)</span>
+            </label>
+            <button type="button" id="importBtn" class="btn btn-primary btn-block">📷 갤러리에서 악보 불러오기</button>
+            <input type="file" id="importInput" accept="image/*" multiple hidden>
+            <p id="importStatus" class="import-status" hidden></p>
+            <p id="storageNote" class="storage-note"></p>
+          </div>
+
+          <div id="organizeNudge" class="organize-nudge" hidden>
+            <span id="organizeNudgeText"></span>
+            <button type="button" id="organizeBtn" class="btn btn-secondary">정리하러 가기</button>
+          </div>
+
+          <div class="filter-row" id="tempoFilterRow">
+            <button type="button" class="filter-btn active" data-tempo="all">전체</button>
+            <button type="button" class="filter-btn" data-tempo="fast">🔥 빠름</button>
+            <button type="button" class="filter-btn" data-tempo="mid">🙌 중간</button>
+            <button type="button" class="filter-btn" data-tempo="slow">🕯️ 느림</button>
+            <button type="button" class="filter-btn" data-tempo="todo">정리 안 됨</button>
+          </div>
+          <div class="key-filter" id="keyFilterRow" hidden></div>
+
+          <div id="songGroups" class="song-groups"></div>
+          <p id="songEmpty" class="empty-msg">아직 담긴 악보가 없습니다. 위에서 갤러리 사진을 불러와 주세요.</p>
+        </div>
+
+        <div id="worshipSetlistsView" hidden>
+          <div id="setlistIndex">
+            <div class="card">
+              <div class="today-card-label">콘티 자동으로 짜기</div>
+              <p class="auto-help">빠른 찬양으로 시작해서 느린 곡으로 잦아들도록, 키가 가까운 곡끼리 이어 붙입니다.</p>
+              <div class="auto-row">
+                <label for="autoFastCount">🔥 빠른 찬양</label>
+                <input type="number" id="autoFastCount" min="0" max="10" value="2">
+                <span>곡</span>
+              </div>
+              <div class="auto-row">
+                <label for="autoSlowCount">🕯️ 느린 곡</label>
+                <input type="number" id="autoSlowCount" min="0" max="10" value="2">
+                <span>곡</span>
+              </div>
+              <button type="button" id="autoBuildBtn" class="btn btn-primary btn-block">✨ 자동으로 콘티 짜기</button>
+              <button type="button" id="newSetlistBtn" class="btn btn-secondary btn-block">빈 콘티 만들어 직접 담기</button>
+              <p id="poolSummary" class="storage-note"></p>
+            </div>
+
+            <div class="section-title-row"><h2>지난 콘티</h2></div>
+            <ul id="setlistList" class="setlist-list"></ul>
+            <p id="setlistEmpty" class="empty-msg">아직 짠 콘티가 없습니다.</p>
+          </div>
+
+          <div id="setlistDetail" hidden>
+            <button type="button" id="setlistBackBtn" class="btn-link">← 콘티 목록</button>
+            <input type="text" id="setlistTitleInput" class="setlist-title-input" placeholder="콘티 이름">
+            <p id="setlistFlow" class="setlist-flow" hidden></p>
+            <ul id="setlistSongs" class="setlist-songs"></ul>
+            <p id="setlistDetailEmpty" class="empty-msg">아직 담은 곡이 없습니다. 아래에서 곡을 담아 주세요.</p>
+            <div class="setlist-actions">
+              <button type="button" id="setlistAddBtn" class="btn btn-primary">＋ 곡 담기</button>
+              <button type="button" id="setlistPlayBtn" class="btn btn-secondary">🎼 악보 넘겨보기</button>
+              <button type="button" id="setlistCopyBtn" class="btn btn-secondary">글로 복사</button>
+            </div>
+            <p id="setlistCopyResult" class="setlist-copy-result" hidden></p>
+            <button type="button" id="setlistDeleteBtn" class="btn-link">이 콘티 지우기</button>
+          </div>
+        </div>
+      </section>
     </main>
 
     <nav class="tab-bar">
@@ -172,6 +257,9 @@
       </button>
       <button class="tab-btn" data-tab="tab-prayer">
         <span class="tab-icon">🙏</span><span>기도제목</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-worship">
+        <span class="tab-icon">🎵</span><span>찬양</span>
       </button>
     </nav>
   </div>
@@ -239,7 +327,98 @@
     </div>
   </div>
 
+
+  <!-- 곡 정리하기 -->
+  <div id="songEditModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-worship></div>
+    <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="songEditHeading">
+      <div class="modal-header">
+        <h3 id="songEditHeading">악보 정리</h3>
+        <button type="button" class="modal-close" data-close-worship aria-label="닫기">✕</button>
+      </div>
+      <div class="song-edit-body">
+        <div id="songEditPages" class="page-strip"></div>
+        <button type="button" id="songEditAddPageBtn" class="btn-link">＋ 이 곡에 사진 더하기</button>
+        <input type="file" id="addPageInput" accept="image/*" multiple hidden>
+
+        <label class="edit-label" for="songEditTitle">곡 제목</label>
+        <input type="text" id="songEditTitle" class="edit-input" placeholder="예: 주 은혜임을">
+
+        <span class="edit-label">키 (악보 맨 앞 조표를 보고 눌러 주세요)</span>
+        <div id="keyPicker" class="key-picker"></div>
+
+        <span class="edit-label">빠르기</span>
+        <div id="tempoPicker" class="tempo-picker"></div>
+
+        <div class="bpm-row">
+          <label class="edit-label" for="songEditBpm">BPM</label>
+          <input type="number" id="songEditBpm" class="edit-input bpm-input" min="30" max="260" placeholder="예: 128">
+          <button type="button" id="tapTempoBtn" class="btn btn-secondary">👆 박자 두드리기</button>
+        </div>
+        <p id="tapTempoResult" class="tap-result" hidden></p>
+
+        <label class="edit-label" for="songEditNote">메모 (인도자 멘트, 반복 구간 등)</label>
+        <textarea id="songEditNote" class="edit-input" rows="2" placeholder="예: 2절 후 후렴 반복"></textarea>
+
+        <p id="songEditQueue" class="queue-note" hidden><span id="songEditQueueText"></span></p>
+      </div>
+      <div class="song-edit-actions">
+        <button type="button" id="songEditDeleteBtn" class="btn-link">이 악보 지우기</button>
+        <button type="button" id="songEditSkipBtn" class="btn btn-secondary">나중에</button>
+        <button type="button" id="songEditSaveBtn" class="btn btn-primary">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 악보 보기 -->
+  <div id="viewerModal" class="modal viewer-modal" hidden>
+    <div class="modal-backdrop" data-close-worship></div>
+    <div class="viewer-sheet" role="dialog" aria-modal="true" aria-labelledby="viewerTitle">
+      <div class="viewer-head">
+        <div class="viewer-headings">
+          <h3 id="viewerTitle">악보</h3>
+          <p id="viewerMeta" class="viewer-meta"></p>
+        </div>
+        <button type="button" id="viewerEditBtn" class="btn-link">고치기</button>
+        <button type="button" class="modal-close" data-close-worship aria-label="닫기">✕</button>
+      </div>
+      <p id="viewerNote" class="viewer-note" hidden></p>
+      <div class="viewer-stage">
+        <img id="viewerImage" alt="악보" hidden>
+        <p id="viewerEmpty" class="empty-msg" hidden>이 곡에는 담긴 사진이 없습니다.</p>
+      </div>
+      <div class="viewer-nav">
+        <button type="button" id="viewerPrev" class="btn btn-secondary">◀ 이전</button>
+        <button type="button" id="viewerNext" class="btn btn-secondary">다음 ▶</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 콘티에 곡 담기 -->
+  <div id="songPickModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-worship></div>
+    <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="songPickHeading">
+      <div class="modal-header">
+        <h3 id="songPickHeading">콘티에 담을 곡 고르기</h3>
+        <button type="button" class="modal-close" data-close-worship aria-label="닫기">✕</button>
+      </div>
+      <div class="filter-row" id="pickFilterRow">
+        <button type="button" class="filter-btn active" data-pick="all">전체</button>
+        <button type="button" class="filter-btn" data-pick="fast">🔥 빠름</button>
+        <button type="button" class="filter-btn" data-pick="mid">🙌 중간</button>
+        <button type="button" class="filter-btn" data-pick="slow">🕯️ 느림</button>
+      </div>
+      <ul id="songPickList" class="pick-list"></ul>
+      <p id="songPickEmpty" class="empty-msg" hidden>고를 곡이 없습니다.</p>
+      <div class="modal-footer">
+        <span>누르면 담기고, 다시 누르면 빠집니다</span>
+        <button type="button" id="songPickDoneBtn" class="btn btn-primary">다 골랐어요</button>
+      </div>
+    </div>
+  </div>
+
   <script src="verses.js"></script>
   <script src="app.js"></script>
+  <script src="worship.js"></script>
 </body>
 </html>

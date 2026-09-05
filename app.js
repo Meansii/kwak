@@ -1148,6 +1148,8 @@
       completedDays,
       bibleUrl: bibleUrlPattern(),
       bibleAppUrl: bibleAppUrlPattern(),
+      // 찬양 곡 정보와 콘티도 함께 담습니다 (악보 사진은 용량이 커서 담지 못합니다).
+      worship: window.kwakWorship ? window.kwakWorship.exportData() : null,
     };
   }
 
@@ -1155,7 +1157,8 @@
     backupText.value = JSON.stringify(buildBackup());
     backupText.focus();
     backupText.select();
-    showBackupResult(`기도제목 ${prayers.length}개, 기도 기록 ${sessions.length}개, 통독 ${completedDays.length}일치를 담았습니다. 복사해서 보관해 주세요.`);
+    const worshipPart = window.kwakWorship ? `, ${window.kwakWorship.summary()}` : '';
+    showBackupResult(`기도제목 ${prayers.length}개, 기도 기록 ${sessions.length}개, 통독 ${completedDays.length}일치${worshipPart}를 담았습니다. 복사해서 보관해 주세요.`);
   });
 
   document.getElementById('backupCopyBtn').addEventListener('click', async () => {
@@ -1202,6 +1205,8 @@
     saveJSON(STORAGE_KEYS.completedDays, completedDays);
     if (typeof data.bibleUrl === 'string') saveBibleUrl(STORAGE_KEYS.bibleUrl, data.bibleUrl);
     if (typeof data.bibleAppUrl === 'string') saveBibleUrl(STORAGE_KEYS.bibleAppUrl, data.bibleAppUrl);
+
+    if (data.worship && window.kwakWorship) window.kwakWorship.importData(data.worship);
 
     renderPrayers();
     renderSessions();
