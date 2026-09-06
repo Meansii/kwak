@@ -182,6 +182,7 @@
               <span>고른 사진을 <strong>한 곡</strong>으로 묶기 (2장짜리 악보일 때)</span>
             </label>
             <button type="button" id="importBtn" class="btn btn-primary btn-block">📷 갤러리에서 악보 불러오기</button>
+            <button type="button" id="listenNewKeyBtn" class="btn btn-secondary btn-block">🎤 지금 나오는 노래 키 찾기</button>
             <input type="file" id="importInput" accept="image/*" multiple hidden>
             <p id="importStatus" class="import-status" hidden></p>
             <p id="storageNote" class="storage-note"></p>
@@ -344,7 +345,10 @@
         <label class="edit-label" for="songEditTitle">곡 제목</label>
         <input type="text" id="songEditTitle" class="edit-input" placeholder="예: 주 은혜임을">
 
-        <span class="edit-label">키 (악보 맨 앞 조표를 보고 눌러 주세요)</span>
+        <div class="edit-label-row">
+          <span class="edit-label">키 (악보 맨 앞 조표를 보고 눌러 주세요)</span>
+          <button type="button" id="listenKeyBtn" class="btn-link">🎤 소리 듣고 찾기</button>
+        </div>
         <div id="keyPicker" class="key-picker"></div>
 
         <span class="edit-label">빠르기</span>
@@ -417,8 +421,54 @@
     </div>
   </div>
 
+
+  <!-- 소리 듣고 키 찾기 -->
+  <div id="keyFinderModal" class="modal keyfinder-modal" hidden>
+    <div class="modal-backdrop" data-close-keyfinder></div>
+    <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="keyFinderHeading">
+      <div class="modal-header">
+        <h3 id="keyFinderHeading">소리 듣고 키 찾기</h3>
+        <button type="button" class="modal-close" data-close-keyfinder aria-label="닫기">✕</button>
+      </div>
+
+      <div id="keyFinderIntro">
+        <p class="kf-help">
+          멜론·유튜브에서 노래를 <strong>스피커로 크게</strong> 틀어 두고 아래 버튼을 눌러 주세요.
+          이 화면을 켜 둔 채로 15초 동안 듣고 키를 알려 드립니다.
+        </p>
+        <ul class="kf-tips">
+          <li>이어폰을 끼면 소리를 못 듣습니다. 빼 주세요.</li>
+          <li>아이폰은 마이크를 켜는 순간 다른 앱 소리가 줄 수 있습니다. 그럴 땐 <strong>다른 기기</strong>에서 노래를 틀고 이 폰으로 들려주세요.</li>
+          <li>노래가 한창 진행되는 부분(후렴 등)에서 들려주면 더 잘 맞습니다.</li>
+        </ul>
+        <button type="button" id="keyFinderStartBtn" class="btn btn-primary btn-block">🎤 듣기 시작</button>
+      </div>
+
+      <div id="keyFinderListening" hidden>
+        <p id="keyFinderHeard" class="kf-heard">🔊 소리를 잘 듣고 있습니다</p>
+        <div class="kf-progress"><div id="keyFinderProgress" class="kf-progress-fill"></div></div>
+        <p id="keyFinderTimer" class="kf-timer">15초 남음</p>
+        <div id="keyFinderBars" class="chroma-bars"></div>
+        <p id="keyFinderGuess" class="kf-guess" hidden></p>
+        <button type="button" id="keyFinderStopBtn" class="btn btn-secondary btn-block">그만 듣고 결과 보기</button>
+      </div>
+
+      <div id="keyFinderResult" hidden>
+        <div id="keyFinderResults" class="kf-results"></div>
+        <p id="keyFinderNote" class="kf-note"></p>
+        <button type="button" id="keyFinderAgainBtn" class="btn btn-secondary btn-block">다시 듣기</button>
+      </div>
+
+      <div id="keyFinderErrorBox" hidden>
+        <p id="keyFinderError" class="kf-error"></p>
+        <button type="button" id="keyFinderRetryBtn" class="btn btn-secondary btn-block">다시 해보기</button>
+      </div>
+    </div>
+  </div>
+
   <script src="verses.js"></script>
   <script src="app.js"></script>
+  <script src="keyfinder.js"></script>
   <script src="worship.js"></script>
 </body>
 </html>

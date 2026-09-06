@@ -904,6 +904,32 @@
       await importFiles(files);
     });
 
+    // 소리로 찾은 키는 곡 정리 화면에 그대로 채워 넣습니다.
+    el('listenKeyBtn').addEventListener('click', () => {
+      if (window.kwakKeyFinder) window.kwakKeyFinder.open((key) => renderKeyPicker(key));
+    });
+
+    // 악보 없이 노래만 듣고 키를 찾은 뒤, 그 키로 새 곡을 만들어 둘 수 있습니다.
+    el('listenNewKeyBtn').addEventListener('click', () => {
+      if (!window.kwakKeyFinder) return;
+      window.kwakKeyFinder.open((key) => {
+        const song = {
+          id: newId(),
+          title: '',
+          key,
+          tempo: '',
+          bpm: null,
+          note: '',
+          images: [],
+          createdAt: new Date().toISOString(),
+        };
+        songs.push(song);
+        saveSongs();
+        renderSongs();
+        openSongEditor(song.id);
+      });
+    });
+
     el('organizeBtn').addEventListener('click', () => {
       const todo = unorganizedSongs();
       if (todo.length) startOrganizeQueue(todo.map((s) => s.id));
