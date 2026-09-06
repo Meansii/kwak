@@ -1185,3 +1185,8 @@ body {
   font-size: 13px;
   line-height: 1.7;
 }
+
+/* 새로 만든 버튼·입력칸도 본문 글꼴을 그대로 씁니다. */
+.seg-btn, .key-chip, .song-card, .key-opt, .tempo-opt, .icon-btn,
+.setlist-open, .page-del, .pick-row, .edit-input, .setlist-title-input,
+.auto-row input, .check-line { font-family: inherit; }

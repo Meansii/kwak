@@ -1120,9 +1120,11 @@
     renderPrayers();
   });
 
-  document.querySelectorAll('.filter-btn').forEach((btn) => {
+  // 다른 탭에도 .filter-btn 이 있으므로 기도제목 필터 줄 안에서만 찾습니다.
+  const prayerFilterRow = document.getElementById('prayerFilterRow');
+  prayerFilterRow.querySelectorAll('.filter-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach((b) => b.classList.remove('active'));
+      prayerFilterRow.querySelectorAll('.filter-btn').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       currentFilter = btn.dataset.filter;
       renderPrayers();
