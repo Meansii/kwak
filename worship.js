@@ -934,6 +934,339 @@
     return lines.join('\n');
   }
 
+  // ---------- 콘티를 사진으로 ----------
+  const SHARE_WIDTH = 1080;
+  // 아이폰 사파리는 캔버스 넓이×높이가 약 1,670만 화소를 넘으면 빈 그림을 내놓습니다.
+  const MAX_CANVAS_PIXELS = 16000000;
+
+  const SHARE_COLORS = {
+    bg: '#1c1a17',
+    surface: '#262320',
+    line: '#3a352d',
+    ink: '#ece6da',
+    muted: '#a89b86',
+    accent: '#c98a63',
+    onAccent: '#221b15',
+  };
+
+  const FONT = '-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
+
+  function canvasToBlob(canvas, type, quality) {
+    return new Promise((resolve) => canvas.toBlob(resolve, type, quality));
+  }
+
+  function loadImageEl(url) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('사진을 열 수 없습니다'));
+      img.src = url;
+    });
+  }
+
+  // 너무 긴 제목은 뒤를 … 로 줄입니다.
+  function fitText(ctx, text, maxWidth) {
+    if (ctx.measureText(text).width <= maxWidth) return text;
+    let cut = text;
+    while (cut.length > 1 && ctx.measureText(cut + '…').width > maxWidth) cut = cut.slice(0, -1);
+    return cut + '…';
+  }
+
+  function songLine(song) {
+    const bits = [];
+    if (song.key) bits.push(song.key);
+    const t = TEMPO_BY_ID.get(song.tempo);
+    if (t) bits.push(t.short);
+    if (song.bpm) bits.push(song.bpm + ' BPM');
+    return bits.join(' · ');
+  }
+
+  // 곡 목록만 담은 콘티표 한 장
+  async function buildSetlistCard(list) {
+    const items = setlistSongs(list);
+    const padX = 64;
+    const headH = 232;
+    const rowH = 128;
+    const footH = 104;
+    const canvas = document.createElement('canvas');
+    canvas.width = SHARE_WIDTH;
+    canvas.height = headH + Math.max(1, items.length) * rowH + footH;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = SHARE_COLORS.bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = SHARE_COLORS.accent;
+    ctx.fillRect(0, 0, canvas.width, 10);
+
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = SHARE_COLORS.ink;
+    ctx.font = `700 58px ${FONT}`;
+    ctx.fillText(fitText(ctx, list.title || '콘티', canvas.width - padX * 2), padX, 116);
+
+    const keys = items.map((s) => s.key).filter(Boolean);
+    ctx.fillStyle = SHARE_COLORS.muted;
+    ctx.font = `400 30px ${FONT}`;
+    const sub = `${items.length}곡` + (keys.length ? `  ·  ${keys.join(' → ')}` : '');
+    ctx.fillText(fitText(ctx, sub, canvas.width - padX * 2), padX, 168);
+
+    ctx.strokeStyle = SHARE_COLORS.line;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(padX, headH - 34);
+    ctx.lineTo(canvas.width - padX, headH - 34);
+    ctx.stroke();
+
+    if (!items.length) {
+      ctx.fillStyle = SHARE_COLORS.muted;
+      ctx.font = `400 34px ${FONT}`;
+      ctx.fillText('아직 담은 곡이 없습니다', padX, headH + 60);
+    }
+
+    items.forEach((song, index) => {
+      const top = headH + index * rowH;
+
+      ctx.fillStyle = SHARE_COLORS.accent;
+      ctx.beginPath();
+      ctx.arc(padX + 26, top + 46, 26, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = SHARE_COLORS.onAccent;
+      ctx.font = `700 30px ${FONT}`;
+      ctx.textAlign = 'center';
+      ctx.fillText(String(index + 1), padX + 26, top + 57);
+      ctx.textAlign = 'left';
+
+      const textX = padX + 76;
+      ctx.fillStyle = SHARE_COLORS.ink;
+      ctx.font = `600 42px ${FONT}`;
+      ctx.fillText(fitText(ctx, song.title || '제목 없음', canvas.width - textX - padX), textX, top + 56);
+
+      const line = songLine(song);
+      if (line) {
+        ctx.fillStyle = SHARE_COLORS.accent;
+        ctx.font = `500 30px ${FONT}`;
+        ctx.fillText(line, textX, top + 102);
+      }
+
+      if (index < items.length - 1) {
+        ctx.strokeStyle = SHARE_COLORS.line;
+        ctx.beginPath();
+        ctx.moveTo(textX, top + rowH - 10);
+        ctx.lineTo(canvas.width - padX, top + rowH - 10);
+        ctx.stroke();
+      }
+    });
+
+    ctx.fillStyle = SHARE_COLORS.muted;
+    ctx.font = `400 26px ${FONT}`;
+    ctx.textAlign = 'center';
+    ctx.fillText('말씀과 기도 · 찬양 콘티', canvas.width / 2, canvas.height - 44);
+    ctx.textAlign = 'left';
+
+    return canvasToBlob(canvas, 'image/png');
+  }
+
+  // 콘티에 담긴 악보 사진을 순서대로 이어 붙입니다. 너무 길면 여러 장으로 나눕니다.
+  async function buildSheetImages(list, onProgress) {
+    const items = setlistSongs(list);
+    const pages = [];
+    for (const song of items) {
+      (song.images || []).forEach((imageId, pageIndex) => {
+        pages.push({ song, imageId, pageIndex, pageCount: song.images.length });
+      });
+    }
+    if (!pages.length) return [];
+
+    const capH = 74;
+    const loaded = [];
+    for (let i = 0; i < pages.length; i++) {
+      if (onProgress) onProgress(`악보를 모으는 중… (${i + 1}/${pages.length}장)`);
+      const url = await imageUrl(pages[i].imageId);
+      if (!url) continue;
+      try {
+        const img = await loadImageEl(url);
+        const height = Math.round(img.naturalHeight * (SHARE_WIDTH / img.naturalWidth)) + capH;
+        loaded.push({ ...pages[i], img, height });
+      } catch (e) {
+        /* 못 읽는 장은 건너뜁니다 */
+      }
+    }
+    if (!loaded.length) return [];
+
+    const groups = [];
+    let current = [];
+    let currentHeight = 0;
+    for (const item of loaded) {
+      if (current.length && (currentHeight + item.height) * SHARE_WIDTH > MAX_CANVAS_PIXELS) {
+        groups.push(current);
+        current = [];
+        currentHeight = 0;
+      }
+      current.push(item);
+      currentHeight += item.height;
+    }
+    if (current.length) groups.push(current);
+
+    const blobs = [];
+    for (let g = 0; g < groups.length; g++) {
+      if (onProgress) onProgress(`사진을 만드는 중… (${g + 1}/${groups.length}장)`);
+      const group = groups[g];
+      const canvas = document.createElement('canvas');
+      canvas.width = SHARE_WIDTH;
+      canvas.height = group.reduce((sum, item) => sum + item.height, 0);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = SHARE_COLORS.bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      let y = 0;
+      for (const item of group) {
+        ctx.fillStyle = SHARE_COLORS.surface;
+        ctx.fillRect(0, y, canvas.width, capH);
+        ctx.fillStyle = SHARE_COLORS.accent;
+        ctx.fillRect(0, y, 8, capH);
+
+        const order = items.indexOf(item.song) + 1;
+        const bits = [`${order}. ${item.song.title || '제목 없음'}`];
+        const line = songLine(item.song);
+        if (line) bits.push(line);
+        if (item.pageCount > 1) bits.push(`${item.pageIndex + 1}/${item.pageCount}장`);
+        ctx.fillStyle = SHARE_COLORS.ink;
+        ctx.font = `600 32px ${FONT}`;
+        ctx.fillText(fitText(ctx, bits.join('   ·   '), canvas.width - 60), 30, y + 48);
+
+        const imgH = item.height - capH;
+        ctx.drawImage(item.img, 0, y + capH, canvas.width, imgH);
+        y += item.height;
+      }
+      const blob = await canvasToBlob(canvas, 'image/jpeg', 0.88);
+      if (blob) blobs.push(blob);
+    }
+    return blobs;
+  }
+
+  // 아티팩트 화면(claude.ai 안)에서는 보통 내려받기가 막혀 있어, 그쪽 저장 기능을 씁니다.
+  async function saveThroughArtifact(blob, filename) {
+    if (!window.claude || typeof window.claude.use !== 'function') return '';
+    try {
+      const downloads = await window.claude.use('downloads');
+      if (!downloads) return '';
+      const result = await downloads.save({ filename, data: blob });
+      return result && result.status === 'delivered' ? '보냈습니다.' : '사진을 저장했습니다.';
+    } catch (e) {
+      if (e && e.code === 'declined') return '';
+      return '';
+    }
+  }
+
+  // 아이폰은 공유 시트로, 다른 곳은 내려받기로. 둘 다 막히면 사진을 꾹 눌러 저장하시면 됩니다.
+  async function shareOrDownload(blob, filename) {
+    try {
+      const file = new File([blob], filename, { type: blob.type });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file] });
+        return '공유 창을 열었습니다.';
+      }
+    } catch (e) {
+      if (e && e.name === 'AbortError') return '';
+    }
+
+    const viaArtifact = await saveThroughArtifact(blob, filename);
+    if (viaArtifact) return viaArtifact;
+
+    try {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      // 누르자마자 지우면 파일 이름이 떨어져 나가는 브라우저가 있어 조금 두었다 지웁니다.
+      setTimeout(() => {
+        a.remove();
+        URL.revokeObjectURL(url);
+      }, 10000);
+      return '사진을 내려받았습니다.';
+    } catch (e) {
+      return '아래 사진을 꾹 눌러 "사진에 저장"을 눌러 주세요.';
+    }
+  }
+
+  function shareFileName(list, index, total, ext) {
+    const base = (list.title || '콘티').replace(/[\\/:*?"<>|]/g, ' ').trim() || '콘티';
+    return total > 1 ? `${base} (${index + 1}).${ext}` : `${base}.${ext}`;
+  }
+
+  function showShareStatus(message) {
+    const box = el('shareStatus');
+    box.textContent = message;
+    box.hidden = !message;
+  }
+
+  function renderShareResults(list, blobs, ext) {
+    const wrap = el('shareResults');
+    wrap.innerHTML = '';
+    blobs.forEach((blob, index) => {
+      const item = document.createElement('div');
+      item.className = 'share-item';
+      const name = shareFileName(list, index, blobs.length, ext);
+      item.innerHTML = `<div class="share-preview"><img alt="${escapeHtml(name)}"></div>` +
+        `<button type="button" class="btn btn-primary btn-block">📥 이 사진 저장 · 공유</button>`;
+      const img = item.querySelector('img');
+      const url = URL.createObjectURL(blob);
+      img.src = url;
+      img.addEventListener('load', () => setTimeout(() => URL.revokeObjectURL(url), 60000), { once: true });
+      item.querySelector('button').addEventListener('click', async () => {
+        const message = await shareOrDownload(blob, name);
+        if (message) showShareStatus(message);
+      });
+      wrap.appendChild(item);
+    });
+    el('shareHint').hidden = blobs.length === 0;
+  }
+
+  function openShareModal() {
+    el('shareResults').innerHTML = '';
+    el('shareHint').hidden = true;
+    showShareStatus('');
+    el('shareModal').hidden = false;
+  }
+
+  function closeShareModal() {
+    el('shareModal').hidden = true;
+    el('shareResults').innerHTML = '';
+  }
+
+  async function makeShareImage(kind) {
+    const list = setlistById(openSetlistId);
+    if (!list) return;
+    el('shareResults').innerHTML = '';
+    el('shareHint').hidden = true;
+
+    try {
+      if (kind === 'card') {
+        showShareStatus('콘티표를 만드는 중…');
+        const blob = await buildSetlistCard(list);
+        if (!blob) throw new Error('만들지 못했습니다');
+        renderShareResults(list, [blob], 'png');
+        showShareStatus('콘티표가 만들어졌습니다.');
+        return;
+      }
+
+      showShareStatus('악보를 모으는 중…');
+      const blobs = await buildSheetImages(list, showShareStatus);
+      if (!blobs.length) {
+        showShareStatus('이 콘티에는 담긴 악보 사진이 없습니다.');
+        return;
+      }
+      renderShareResults(list, blobs, 'jpg');
+      showShareStatus(blobs.length > 1
+        ? `사진이 길어서 ${blobs.length}장으로 나눴습니다.`
+        : '악보 사진이 만들어졌습니다.');
+    } catch (e) {
+      showShareStatus('사진을 만들지 못했습니다. 곡 수를 줄여 다시 해보세요.');
+    }
+  }
+
   // ---------- 곡 고르기 (콘티에 넣기) ----------
   let pickFilter = 'all';
   let pickKeyFilter = 'all';
@@ -1181,6 +1514,18 @@
       }
       openViewer(list.songIds, 0);
     });
+    el('setlistImageBtn').addEventListener('click', () => {
+      const list = setlistById(openSetlistId);
+      if (!list || !list.songIds.length) {
+        alert('콘티에 곡을 먼저 담아 주세요.');
+        return;
+      }
+      openShareModal();
+    });
+    el('shareCardBtn').addEventListener('click', () => makeShareImage('card'));
+    el('shareSheetsBtn').addEventListener('click', () => makeShareImage('sheets'));
+    document.querySelectorAll('[data-close-share]').forEach((btn) => btn.addEventListener('click', closeShareModal));
+
     el('setlistCopyBtn').addEventListener('click', async () => {
       const list = setlistById(openSetlistId);
       if (!list) return;

@@ -241,6 +241,7 @@
               <button type="button" id="setlistAddBtn" class="btn btn-primary">＋ 곡 담기</button>
               <button type="button" id="setlistPlayBtn" class="btn btn-secondary">🎼 악보 넘겨보기</button>
               <button type="button" id="setlistCopyBtn" class="btn btn-secondary">글로 복사</button>
+              <button type="button" id="setlistImageBtn" class="btn btn-secondary">📷 사진으로 저장</button>
             </div>
             <p id="setlistCopyResult" class="setlist-copy-result" hidden></p>
             <button type="button" id="setlistDeleteBtn" class="btn-link">이 콘티 지우기</button>
@@ -473,6 +474,28 @@
         <p id="keyFinderError" class="kf-error"></p>
         <button type="button" id="keyFinderRetryBtn" class="btn btn-secondary btn-block">다시 해보기</button>
       </div>
+    </div>
+  </div>
+
+
+  <!-- 콘티를 사진으로 -->
+  <div id="shareModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-share></div>
+    <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="shareHeading">
+      <div class="modal-header">
+        <h3 id="shareHeading">콘티 사진으로 저장</h3>
+        <button type="button" class="modal-close" data-close-share aria-label="닫기">✕</button>
+      </div>
+      <p class="share-help">무엇을 사진으로 만들까요?</p>
+      <div class="share-choice">
+        <button type="button" id="shareCardBtn" class="btn btn-primary">📋 콘티표<small>곡 목록·키</small></button>
+        <button type="button" id="shareSheetsBtn" class="btn btn-secondary">🎼 악보 전체<small>사진 이어붙이기</small></button>
+      </div>
+      <p id="shareStatus" class="share-status" hidden></p>
+      <div id="shareResults" class="share-results"></div>
+      <p id="shareHint" class="share-hint" hidden>
+        저장이 안 되면 위 사진을 <strong>손가락으로 꾹 눌러</strong> "사진에 저장"을 누르시면 됩니다.
+      </p>
     </div>
   </div>
 
