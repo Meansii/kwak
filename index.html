@@ -412,12 +412,16 @@
         <h3 id="songPickHeading">콘티에 담을 곡 고르기</h3>
         <button type="button" class="modal-close" data-close-worship aria-label="닫기">✕</button>
       </div>
+      <input type="search" id="songPickSearch" class="verse-search-input"
+             placeholder="곡 이름이나 키로 찾기 (예: 은혜, G, Am)" autocomplete="off">
       <div class="filter-row" id="pickFilterRow">
         <button type="button" class="filter-btn active" data-pick="all">전체</button>
         <button type="button" class="filter-btn" data-pick="fast">🔥 빠름</button>
         <button type="button" class="filter-btn" data-pick="mid">🙌 중간</button>
         <button type="button" class="filter-btn" data-pick="slow">🕯️ 느림</button>
       </div>
+      <div class="key-filter" id="pickKeyRow"></div>
+      <p id="songPickCount" class="storage-note"></p>
       <ul id="songPickList" class="pick-list"></ul>
       <p id="songPickEmpty" class="empty-msg" hidden>고를 곡이 없습니다.</p>
       <div class="modal-footer">

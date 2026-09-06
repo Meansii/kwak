@@ -936,13 +936,76 @@
 
   // ---------- 곡 고르기 (콘티에 넣기) ----------
   let pickFilter = 'all';
+  let pickKeyFilter = 'all';
+  let pickQuery = '';
 
   function openSongPicker() {
+    pickFilter = 'all';
+    pickKeyFilter = 'all';
+    pickQuery = '';
+    el('songPickSearch').value = '';
     el('songPickModal').hidden = false;
     renderSongPicker();
   }
   function closeSongPicker() {
     el('songPickModal').hidden = true;
+  }
+
+  // 콘티 마지막 곡의 키. "가까운 키"는 여기서부터 잽니다.
+  function lastSetlistKey() {
+    const list = setlistById(openSetlistId);
+    if (!list) return '';
+    const items = setlistSongs(list);
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (items[i].key) return items[i].key;
+    }
+    return '';
+  }
+
+  function matchesPickQuery(song) {
+    if (!pickQuery) return true;
+    const q = pickQuery.toLowerCase();
+    if ((song.title || '').toLowerCase().includes(q)) return true;
+    // "G", "am" 처럼 키를 쳐도 찾아 줍니다.
+    return (song.key || '').toLowerCase().indexOf(q) === 0;
+  }
+
+  function matchesPickKey(song) {
+    if (pickKeyFilter === 'all') return true;
+    if (pickKeyFilter === 'near') {
+      const distance = keyDistance(lastSetlistKey(), song.key);
+      return distance !== null && distance <= 2;
+    }
+    return (song.key || '') === pickKeyFilter;
+  }
+
+  function renderPickKeyRow() {
+    const row = el('pickKeyRow');
+    row.innerHTML = '';
+    const makeChip = (value, label) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'key-chip' + (pickKeyFilter === value ? ' active' : '');
+      btn.textContent = label;
+      btn.addEventListener('click', () => {
+        pickKeyFilter = pickKeyFilter === value ? 'all' : value;
+        renderSongPicker();
+      });
+      row.appendChild(btn);
+    };
+
+    makeChip('all', '모든 키');
+    const lastKey = lastSetlistKey();
+    if (lastKey) makeChip('near', `${lastKey}와 가까운 키`);
+
+    const used = [];
+    for (const song of songs) {
+      const k = song.key || '';
+      if (k && !used.includes(k)) used.push(k);
+    }
+    used.sort((a, b) => keySortValue(a) - keySortValue(b));
+    for (const k of used) makeChip(k, k);
+    if (songs.some((s) => !s.key)) makeChip('', '키 미정');
   }
 
   function renderSongPicker() {
@@ -951,9 +1014,14 @@
     document.querySelectorAll('#pickFilterRow .filter-btn').forEach((b) => {
       b.classList.toggle('active', b.dataset.pick === pickFilter);
     });
+    renderPickKeyRow();
+
     const wrap = el('songPickList');
     wrap.innerHTML = '';
-    const visible = sortedSongs(songs.filter((s) => pickFilter === 'all' || s.tempo === pickFilter));
+    const visible = sortedSongs(
+      songs.filter((s) => (pickFilter === 'all' || s.tempo === pickFilter) && matchesPickKey(s) && matchesPickQuery(s))
+    );
+    el('songPickCount').textContent = `담긴 곡 ${songs.length}곡 중 ${visible.length}곡`;
     el('songPickEmpty').hidden = visible.length > 0;
     for (const song of visible) {
       const row = document.createElement('li');
@@ -1143,6 +1211,10 @@
         pickFilter = btn.dataset.pick;
         renderSongPicker();
       });
+    });
+    el('songPickSearch').addEventListener('input', (e) => {
+      pickQuery = e.target.value.trim();
+      renderSongPicker();
     });
     el('songPickDoneBtn').addEventListener('click', closeSongPicker);
 

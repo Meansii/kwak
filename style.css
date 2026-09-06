@@ -1243,3 +1243,9 @@ body {
   padding: 4px 0;
 }
 .key-name-box .key-picker { margin-top: 8px; }
+
+/* 콘티에 곡 담을 때 쓰는 찾기 줄 */
+#songPickModal .key-filter { margin-bottom: 8px; max-height: 92px; overflow-y: auto; }
+#songPickModal .filter-row { margin-bottom: 10px; }
+#songPickModal .filter-row .filter-btn { padding: 8px 4px; font-size: 12px; }
+#songPickCount { margin: 0 0 8px; }
