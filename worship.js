@@ -185,6 +185,37 @@
     return (isMinor(key) ? 100 : 0) + i;
   }
 
+  // 조표(맨 앞 ♯·♭ 개수) → 장조. 칸 번호가 곧 개수입니다.
+  const SHARP_MAJORS = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#'];
+  const FLAT_MAJORS = ['C', 'F', 'Bb', 'Eb', 'Ab', 'C#', 'F#', 'B'];
+
+  // 같은 조표를 쓰는 단조(나란한조)는 장조의 으뜸음에서 아홉 반음 위입니다.
+  function relativeMinor(major) {
+    const i = pitchIndex(major);
+    return i === null ? '' : MAJOR_KEYS[(i + 9) % 12] + 'm';
+  }
+
+  function keyFromSignature(type, count, minor) {
+    const table = type === 'flat' ? FLAT_MAJORS : SHARP_MAJORS;
+    const major = table[count];
+    if (!major) return '';
+    return minor ? relativeMinor(major) : major;
+  }
+
+  // 지금 골라 둔 키가 어떤 조표인지 되짚어, 눌린 자리를 표시해 줍니다.
+  function signatureForKey(key) {
+    if (!key) return null;
+    const minor = isMinor(key);
+    for (const type of ['sharp', 'flat']) {
+      const table = type === 'flat' ? FLAT_MAJORS : SHARP_MAJORS;
+      for (let count = 0; count < table.length; count++) {
+        if (type === 'flat' && count === 0) continue; // ♭ 0개는 ♯ 0개와 같은 자리입니다
+        if (keyFromSignature(type, count, minor) === key) return { type, count, minor };
+      }
+    }
+    return null;
+  }
+
   function tempoFromBpm(bpm) {
     if (!bpm) return '';
     if (bpm >= 105) return 'fast';
@@ -480,6 +511,68 @@
     };
     addRow('장조 (밝은 키)', MAJOR_KEYS);
     addRow('단조 (어두운 키)', MINOR_KEYS);
+    renderSigPicker();
+  }
+
+  let sigMinor = false;
+
+  function renderSigPicker() {
+    const wrap = el('sigPicker');
+    const current = signatureForKey(pickedKey);
+    if (current) sigMinor = current.minor;
+
+    wrap.innerHTML = '';
+    const addRow = (label, type, counts) => {
+      const row = document.createElement('div');
+      row.className = 'sig-row';
+      const title = document.createElement('span');
+      title.className = 'sig-row-label';
+      title.textContent = label;
+      row.appendChild(title);
+      for (const count of counts) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const on = current && current.type === type && current.count === count;
+        btn.className = 'sig-opt' + (on ? ' active' : '');
+        btn.textContent = count === 0 ? '없음' : String(count);
+        btn.addEventListener('click', () => {
+          renderKeyPicker(on ? '' : keyFromSignature(type, count, sigMinor));
+        });
+        row.appendChild(btn);
+      }
+      wrap.appendChild(row);
+    };
+    addRow('♯ 샤프', 'sharp', [0, 1, 2, 3, 4, 5, 6, 7]);
+    addRow('♭ 플랫', 'flat', [1, 2, 3, 4, 5, 6, 7]);
+
+    const modeRow = document.createElement('div');
+    modeRow.className = 'sig-mode';
+    [
+      { minor: false, label: '밝은 곡 (장조)' },
+      { minor: true, label: '어두운 곡 (단조)' },
+    ].forEach(({ minor, label }) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'sig-mode-opt' + (sigMinor === minor ? ' active' : '');
+      btn.textContent = label;
+      btn.addEventListener('click', () => {
+        sigMinor = minor;
+        // 조표를 이미 골랐으면 같은 조표로 장·단조만 바꿔 줍니다.
+        const sig = signatureForKey(pickedKey);
+        renderKeyPicker(sig ? keyFromSignature(sig.type, sig.count, minor) : pickedKey);
+      });
+      modeRow.appendChild(btn);
+    });
+    wrap.appendChild(modeRow);
+
+    const result = el('sigResult');
+    if (current) {
+      const count = current.count === 0 ? '조표 없음' : `${current.type === 'flat' ? '플랫 ♭' : '샤프 ♯'} ${current.count}개`;
+      result.textContent = `${count} · ${current.minor ? '단조' : '장조'} → ${pickedKey} 키`;
+      result.hidden = false;
+    } else {
+      result.hidden = true;
+    }
   }
 
   function renderTempoPicker(selected) {

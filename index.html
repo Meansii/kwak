@@ -346,10 +346,16 @@
         <input type="text" id="songEditTitle" class="edit-input" placeholder="예: 주 은혜임을">
 
         <div class="edit-label-row">
-          <span class="edit-label">키 (악보 맨 앞 조표를 보고 눌러 주세요)</span>
+          <span class="edit-label">조표로 고르기 — 악보 맨 앞 ♯·♭ 개수를 세어 눌러 주세요</span>
           <button type="button" id="listenKeyBtn" class="btn-link">🎤 소리 듣고 찾기</button>
         </div>
-        <div id="keyPicker" class="key-picker"></div>
+        <div id="sigPicker" class="sig-picker"></div>
+        <p id="sigResult" class="sig-result" hidden></p>
+
+        <details class="key-name-box">
+          <summary>키 이름으로 고르기 (G, Am …)</summary>
+          <div id="keyPicker" class="key-picker"></div>
+        </details>
 
         <span class="edit-label">빠르기</span>
         <div id="tempoPicker" class="tempo-picker"></div>

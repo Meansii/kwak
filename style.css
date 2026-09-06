@@ -1190,3 +1190,56 @@ body {
 .seg-btn, .key-chip, .song-card, .key-opt, .tempo-opt, .icon-btn,
 .setlist-open, .page-del, .pick-row, .edit-input, .setlist-title-input,
 .auto-row input, .check-line { font-family: inherit; }
+
+/* 조표(♯·♭ 개수)로 키 고르기 */
+.sig-picker { display: flex; flex-direction: column; gap: 6px; }
+.sig-row { display: flex; align-items: center; gap: 5px; }
+.sig-row-label {
+  flex: 0 0 46px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+.sig-opt {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 2px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sig-opt.active { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+.sig-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 2px; }
+.sig-mode-opt {
+  padding: 10px 4px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.sig-mode-opt.active { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+.sig-result {
+  margin: 10px 0 0;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--highlight);
+  color: var(--primary-dark);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: center;
+}
+.key-name-box { margin-top: 12px; }
+.key-name-box summary {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  padding: 4px 0;
+}
+.key-name-box .key-picker { margin-top: 8px; }
