@@ -193,6 +193,12 @@
             <button type="button" id="organizeBtn" class="btn btn-secondary">정리하러 가기</button>
           </div>
 
+          <div class="filter-row" id="categoryFilterRow">
+            <button type="button" class="filter-btn active" data-category="all">전체</button>
+            <button type="button" class="filter-btn" data-category="hymn">📕 찬송가</button>
+            <button type="button" class="filter-btn" data-category="worship">💫 워십</button>
+            <button type="button" class="filter-btn" data-category="etc">🎵 기타</button>
+          </div>
           <div class="filter-row" id="tempoFilterRow">
             <button type="button" class="filter-btn active" data-tempo="all">전체</button>
             <button type="button" class="filter-btn" data-tempo="fast">🔥 빠름</button>
@@ -211,6 +217,12 @@
             <div class="card">
               <div class="today-card-label">콘티 자동으로 짜기</div>
               <p class="auto-help">빠른 찬양으로 시작해서 느린 곡으로 잦아들도록, 키가 가까운 곡끼리 이어 붙입니다.</p>
+              <div class="filter-row" id="autoCategoryRow">
+                <button type="button" class="filter-btn active" data-auto-category="all">전체</button>
+                <button type="button" class="filter-btn" data-auto-category="hymn">📕 찬송가</button>
+                <button type="button" class="filter-btn" data-auto-category="worship">💫 워십</button>
+                <button type="button" class="filter-btn" data-auto-category="etc">🎵 기타</button>
+              </div>
               <div class="auto-row">
                 <label for="autoFastCount">🔥 빠른 찬양</label>
                 <input type="number" id="autoFastCount" min="0" max="10" value="2">
@@ -358,6 +370,9 @@
           <div id="keyPicker" class="key-picker"></div>
         </details>
 
+        <span class="edit-label">갈래</span>
+        <div id="categoryPicker" class="tempo-picker"></div>
+
         <span class="edit-label">빠르기</span>
         <div id="tempoPicker" class="tempo-picker"></div>
 
@@ -415,6 +430,12 @@
       </div>
       <input type="search" id="songPickSearch" class="verse-search-input"
              placeholder="곡 이름이나 키로 찾기 (예: 은혜, G, Am)" autocomplete="off">
+      <div class="filter-row" id="pickCategoryRow">
+        <button type="button" class="filter-btn active" data-pick-category="all">전체</button>
+        <button type="button" class="filter-btn" data-pick-category="hymn">📕 찬송가</button>
+        <button type="button" class="filter-btn" data-pick-category="worship">💫 워십</button>
+        <button type="button" class="filter-btn" data-pick-category="etc">🎵 기타</button>
+      </div>
       <div class="filter-row" id="pickFilterRow">
         <button type="button" class="filter-btn active" data-pick="all">전체</button>
         <button type="button" class="filter-btn" data-pick="fast">🔥 빠름</button>

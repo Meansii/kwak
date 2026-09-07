@@ -19,6 +19,13 @@
   ];
   const TEMPO_BY_ID = new Map(TEMPOS.map((t) => [t.id, t]));
 
+  const CATEGORIES = [
+    { id: 'hymn', label: '찬송가', icon: '📕' },
+    { id: 'worship', label: '워십', icon: '💫' },
+    { id: 'etc', label: '기타', icon: '🎵' },
+  ];
+  const CATEGORY_BY_ID = new Map(CATEGORIES.map((c) => [c.id, c]));
+
   // 사진은 이 크기로 줄여 담습니다. 악보 글씨는 읽히면서 용량은 크게 줍니다.
   const MAX_IMAGE_DIM = 1800;
   const IMAGE_QUALITY = 0.82;
@@ -228,6 +235,7 @@
 
   let tempoFilter = 'all';
   let keyFilter = 'all';
+  let categoryFilter = 'all';
 
   function matchesFilters(song) {
     if (tempoFilter === 'todo') {
@@ -236,6 +244,7 @@
       return false;
     }
     if (keyFilter !== 'all' && (song.key || '') !== keyFilter) return false;
+    if (categoryFilter !== 'all' && (song.category || '') !== categoryFilter) return false;
     return true;
   }
 
@@ -251,6 +260,10 @@
     const t = TEMPO_BY_ID.get(song.tempo);
     if (!t) return '<span class="badge badge-todo">빠르기 미정</span>';
     return `<span class="badge badge-${song.tempo}">${t.icon} ${t.short}${song.bpm ? ' ' + song.bpm : ''}</span>`;
+  }
+  function categoryBadge(song) {
+    const c = CATEGORY_BY_ID.get(song.category);
+    return c ? `<span class="badge badge-cat">${c.icon} ${c.label}</span>` : '';
   }
   function keyBadge(song) {
     if (!song.key) return '<span class="badge badge-todo">키 미정</span>';
@@ -297,7 +310,7 @@
       (song.images || []).length > 1 ? `<span class="song-pages">${song.images.length}장</span>` : ''
     }</span>
       <span class="song-title">${escapeHtml(song.title || '제목 없음')}</span>
-      <span class="song-badges">${keyBadge(song)}${tempoBadge(song)}</span>`;
+      <span class="song-badges">${categoryBadge(song)}${keyBadge(song)}${tempoBadge(song)}</span>`;
     if (thumbId) setImageSrc(card.querySelector('img'), thumbId);
     card.addEventListener('click', () => onOpen(song));
     return card;
@@ -414,6 +427,7 @@
             title: titleFromFileName(file.name) || '이름 없는 악보',
             key: '',
             tempo: '',
+            category: '',
             bpm: null,
             note: '',
             images: [imageId],
@@ -472,6 +486,7 @@
     el('songEditBpm').value = song.bpm || '';
     renderKeyPicker(song.key || '');
     renderTempoPicker(song.tempo || '');
+    renderCategoryPicker(song.category || '');
     renderEditorPages(song);
     el('songEditQueue').hidden = organizeQueue.length === 0;
     el('songEditQueueText').textContent = `정리할 곡이 ${organizeQueue.length}곡 더 있습니다.`;
@@ -589,6 +604,22 @@
     }
   }
 
+  let pickedCategory = '';
+
+  function renderCategoryPicker(selected) {
+    pickedCategory = selected;
+    const wrap = el('categoryPicker');
+    wrap.innerHTML = '';
+    for (const c of CATEGORIES) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'tempo-opt' + (pickedCategory === c.id ? ' active' : '');
+      btn.innerHTML = `<span class="tempo-opt-icon">${c.icon}</span><span>${c.label}</span>`;
+      btn.addEventListener('click', () => renderCategoryPicker(pickedCategory === c.id ? '' : c.id));
+      wrap.appendChild(btn);
+    }
+  }
+
   function renderEditorPages(song) {
     const wrap = el('songEditPages');
     wrap.innerHTML = '';
@@ -643,6 +674,7 @@
     song.title = el('songEditTitle').value.trim() || '이름 없는 악보';
     song.key = pickedKey;
     song.tempo = pickedTempo;
+    song.category = pickedCategory;
     const bpm = parseInt(el('songEditBpm').value, 10);
     song.bpm = Number.isFinite(bpm) && bpm > 0 ? bpm : null;
     song.note = el('songEditNote').value.trim();
@@ -769,6 +801,7 @@
 
   // ---------- 콘티 ----------
   let openSetlistId = null;
+  let autoCategory = 'all';
 
   function setlistById(id) {
     return setlists.find((l) => l.id === id) || null;
@@ -798,9 +831,12 @@
   }
 
   // 빠른 찬양 → 중간 → 느린 곡 순으로, 키가 가까운 곡끼리 이어 붙입니다.
-  function autoBuild(fastCount, slowCount) {
+  function autoBuild(fastCount, slowCount, category) {
     const pool = { fast: [], mid: [], slow: [] };
-    for (const song of songs) if (pool[song.tempo]) pool[song.tempo].push(song);
+    for (const song of songs) {
+      if (category !== 'all' && (song.category || '') !== category) continue;
+      if (pool[song.tempo]) pool[song.tempo].push(song);
+    }
 
     const picked = [];
     const takeFrom = (bucket, count) => {
@@ -889,7 +925,7 @@
         <span class="setlist-order">${index + 1}</span>
         <span class="setlist-song-main">
           <span class="setlist-song-title">${escapeHtml(song.title)}</span>
-          <span class="song-badges">${keyBadge(song)}${tempoBadge(song)}</span>
+          <span class="song-badges">${categoryBadge(song)}${keyBadge(song)}${tempoBadge(song)}</span>
           ${gap !== null && gap > 2 ? `<span class="key-warn">앞 곡과 ${gap}반음 차이 — 조옮김을 살펴보세요</span>` : ''}
         </span>
         <span class="setlist-song-btns">
@@ -925,6 +961,8 @@
     const lines = [list.title];
     setlistSongs(list).forEach((song, i) => {
       const bits = [];
+      const c = CATEGORY_BY_ID.get(song.category);
+      if (c) bits.push(c.label);
       if (song.key) bits.push(song.key);
       const t = TEMPO_BY_ID.get(song.tempo);
       if (t) bits.push(t.short);
@@ -974,6 +1012,8 @@
 
   function songLine(song) {
     const bits = [];
+    const c = CATEGORY_BY_ID.get(song.category);
+    if (c) bits.push(c.label);
     if (song.key) bits.push(song.key);
     const t = TEMPO_BY_ID.get(song.tempo);
     if (t) bits.push(t.short);
@@ -1270,11 +1310,13 @@
   // ---------- 곡 고르기 (콘티에 넣기) ----------
   let pickFilter = 'all';
   let pickKeyFilter = 'all';
+  let pickCategory = 'all';
   let pickQuery = '';
 
   function openSongPicker() {
     pickFilter = 'all';
     pickKeyFilter = 'all';
+    pickCategory = 'all';
     pickQuery = '';
     el('songPickSearch').value = '';
     el('songPickModal').hidden = false;
@@ -1347,12 +1389,17 @@
     document.querySelectorAll('#pickFilterRow .filter-btn').forEach((b) => {
       b.classList.toggle('active', b.dataset.pick === pickFilter);
     });
+    document.querySelectorAll('#pickCategoryRow .filter-btn').forEach((b) => {
+      b.classList.toggle('active', b.dataset.pickCategory === pickCategory);
+    });
     renderPickKeyRow();
 
     const wrap = el('songPickList');
     wrap.innerHTML = '';
     const visible = sortedSongs(
-      songs.filter((s) => (pickFilter === 'all' || s.tempo === pickFilter) && matchesPickKey(s) && matchesPickQuery(s))
+      songs.filter((s) => (pickFilter === 'all' || s.tempo === pickFilter)
+        && (pickCategory === 'all' || (s.category || '') === pickCategory)
+        && matchesPickKey(s) && matchesPickQuery(s))
     );
     el('songPickCount').textContent = `담긴 곡 ${songs.length}곡 중 ${visible.length}곡`;
     el('songPickEmpty').hidden = visible.length > 0;
@@ -1363,7 +1410,7 @@
       row.innerHTML = `
         <span class="pick-main">
           <span class="pick-title">${escapeHtml(song.title)}</span>
-          <span class="song-badges">${keyBadge(song)}${tempoBadge(song)}</span>
+          <span class="song-badges">${categoryBadge(song)}${keyBadge(song)}${tempoBadge(song)}</span>
         </span>
         <span class="pick-mark">${inList ? '담김' : '+ 담기'}</span>`;
       row.addEventListener('click', () => {
@@ -1412,6 +1459,7 @@
           title: '',
           key,
           tempo: '',
+          category: '',
           bpm: null,
           note: '',
           images: [],
@@ -1427,6 +1475,28 @@
     el('organizeBtn').addEventListener('click', () => {
       const todo = unorganizedSongs();
       if (todo.length) startOrganizeQueue(todo.map((s) => s.id));
+    });
+
+    document.querySelectorAll('#categoryFilterRow .filter-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        categoryFilter = btn.dataset.category;
+        document.querySelectorAll('#categoryFilterRow .filter-btn').forEach((b) => b.classList.toggle('active', b === btn));
+        renderSongs();
+      });
+    });
+
+    document.querySelectorAll('#pickCategoryRow .filter-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        pickCategory = btn.dataset.pickCategory;
+        renderSongPicker();
+      });
+    });
+
+    document.querySelectorAll('#autoCategoryRow .filter-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        autoCategory = btn.dataset.autoCategory;
+        document.querySelectorAll('#autoCategoryRow .filter-btn').forEach((b) => b.classList.toggle('active', b === btn));
+      });
     });
 
     document.querySelectorAll('#tempoFilterRow .filter-btn').forEach((btn) => {
@@ -1486,9 +1556,12 @@
     el('autoBuildBtn').addEventListener('click', () => {
       const fast = parseInt(el('autoFastCount').value, 10) || 0;
       const slow = parseInt(el('autoSlowCount').value, 10) || 0;
-      const picked = autoBuild(fast, slow);
+      const picked = autoBuild(fast, slow, autoCategory);
       if (!picked.length) {
-        alert('빠르기를 정해 둔 곡이 없습니다. 악보 화면에서 곡마다 빠르기를 먼저 정해 주세요.');
+        const only = CATEGORY_BY_ID.get(autoCategory);
+        alert(only
+          ? `${only.label} 중에 빠르기를 정해 둔 곡이 없습니다. 갈래를 "전체"로 두거나, 곡의 빠르기를 먼저 정해 주세요.`
+          : '빠르기를 정해 둔 곡이 없습니다. 악보 화면에서 곡마다 빠르기를 먼저 정해 주세요.');
         return;
       }
       createSetlist(todayLabel(), picked.map((s) => s.id));

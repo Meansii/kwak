@@ -1299,3 +1299,11 @@ body {
   color: var(--text-muted);
   text-align: center;
 }
+
+/* 갈래(찬송가·워십) */
+.badge-cat { background: rgba(236, 178, 135, 0.12); color: var(--primary-dark); border-color: rgba(201, 138, 99, 0.4); }
+#categoryFilterRow .filter-btn,
+#pickCategoryRow .filter-btn,
+#autoCategoryRow .filter-btn { padding: 8px 4px; font-size: 12px; }
+#categoryFilterRow { margin-bottom: 8px; }
+#autoCategoryRow { margin: 10px 0 14px; }
